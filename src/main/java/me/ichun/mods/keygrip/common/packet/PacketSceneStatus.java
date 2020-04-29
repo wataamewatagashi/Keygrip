@@ -1,13 +1,14 @@
 package me.ichun.mods.keygrip.common.packet;
 
-import io.netty.buffer.ByteBuf;
-import me.ichun.mods.ichunutil.common.core.network.AbstractPacket;
-import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
-import me.ichun.mods.keygrip.common.Keygrip;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import io.netty.buffer.ByteBuf;
+import me.ichun.mods.ichunutil.common.core.network.AbstractPacket;
+import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
+import me.ichun.mods.keygrip.common.Keygrip;
 
 public class PacketSceneStatus extends AbstractPacket
 {
@@ -41,10 +42,9 @@ public class PacketSceneStatus extends AbstractPacket
     }
 
     @Override
-    public AbstractPacket execute(Side side, EntityPlayer player)
+    public void execute(Side side, EntityPlayer player)
     {
         handleClient();
-        return null;
     }
 
     @Override

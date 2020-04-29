@@ -1,14 +1,15 @@
 package me.ichun.mods.keygrip.common.packet;
 
-import io.netty.buffer.ByteBuf;
-import me.ichun.mods.ichunutil.common.core.network.AbstractPacket;
-import me.ichun.mods.keygrip.common.Keygrip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import io.netty.buffer.ByteBuf;
+import me.ichun.mods.ichunutil.common.core.network.AbstractPacket;
+import me.ichun.mods.keygrip.common.Keygrip;
 
 public class PacketToggleSleeping extends AbstractPacket
 {
@@ -42,10 +43,9 @@ public class PacketToggleSleeping extends AbstractPacket
     }
 
     @Override
-    public AbstractPacket execute(Side side, EntityPlayer player)
+    public void execute(Side side, EntityPlayer player)
     {
         handleClient();
-        return null;
     }
 
     @Override
@@ -57,12 +57,13 @@ public class PacketToggleSleeping extends AbstractPacket
     @SideOnly(Side.CLIENT)
     public void handleClient()
     {
-        Entity ent = Minecraft.getMinecraft().theWorld.getEntityByID(id);
+        Entity ent = Minecraft.getMinecraft().world.getEntityByID(id);
         if(ent instanceof EntityPlayer)
         {
             EntityPlayer player = (EntityPlayer)ent;
-            player.sleeping = state;
-            player.sleepTimer = 0;
+            //FIXME could not change sleep state
+//            player.sleeping = state;
+//            player.sleepTimer = 0;
 
             player.renderOffsetX = 0.0F;
             player.renderOffsetZ = 0.0F;
