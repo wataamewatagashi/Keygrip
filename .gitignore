@@ -13,3 +13,6 @@
 /build
 /libs
 /src/api
+
+# Minecraft Run File #
+/run
