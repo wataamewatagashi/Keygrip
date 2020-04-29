@@ -1,21 +1,26 @@
 package me.ichun.mods.keygrip.client.gui.window;
 
-import me.ichun.mods.ichunutil.client.gui.Theme;
-import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
-import me.ichun.mods.ichunutil.client.gui.window.Window;
-import me.ichun.mods.ichunutil.client.gui.window.element.*;
-import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
-import me.ichun.mods.keygrip.common.scene.action.Action;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.text.translation.I18n;
+import net.minecraftforge.fml.common.registry.EntityEntry;
 
 import java.util.Collections;
+
+import me.ichun.mods.ichunutil.client.gui.Theme;
+import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
+import me.ichun.mods.ichunutil.client.gui.window.Window;
+import me.ichun.mods.ichunutil.client.gui.window.element.Element;
+import me.ichun.mods.ichunutil.client.gui.window.element.ElementButton;
+import me.ichun.mods.ichunutil.client.gui.window.element.ElementCheckBox;
+import me.ichun.mods.ichunutil.client.gui.window.element.ElementSelector;
+import me.ichun.mods.ichunutil.client.gui.window.element.ElementTextInput;
+import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
+import me.ichun.mods.keygrip.common.scene.action.Action;
 
 public class WindowNewAction extends Window
 {
@@ -28,9 +33,9 @@ public class WindowNewAction extends Window
 
         ElementSelector selector = new ElementSelector(this, 10, 65, width - 20, 12, -2, "window.newAction.entityType", "EntityPlayer");
 
-        for(Object o : EntityList.NAME_TO_CLASS.values())
+        for (EntityEntry o : net.minecraftforge.registries.GameData.getEntityRegistry())
         {
-            Class<? extends Entity> clz = (Class)o;
+            Class<? extends Entity> clz = o.getEntityClass();
             if(EntityLivingBase.class.isAssignableFrom(clz) && Minecraft.getMinecraft().getRenderManager().getEntityClassRenderObject(clz) instanceof RenderLivingBase)
             {
                 selector.choices.put(clz.getSimpleName(), clz);
@@ -53,11 +58,11 @@ public class WindowNewAction extends Window
         super.draw(mouseX, mouseY);
         if(!minimized)
         {
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.newAction.name"), posX + 11, posY + 20, Theme.getAsHex(workspace.currentTheme.font), false);
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.newAction.entityType"), posX + 11, posY + 55, Theme.getAsHex(workspace.currentTheme.font), false);
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.newAction.preCreate"), posX + 23, posY + 90, Theme.getAsHex(workspace.currentTheme.font), false);
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.newAction.persist"), posX + 23, posY + 110, Theme.getAsHex(workspace.currentTheme.font), false);
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.newAction.playerName"), posX + 11, posY + 125, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.newAction.name"), posX + 11, posY + 20, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.newAction.entityType"), posX + 11, posY + 55, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.newAction.preCreate"), posX + 23, posY + 90, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.newAction.persist"), posX + 23, posY + 110, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.newAction.playerName"), posX + 11, posY + 125, Theme.getAsHex(workspace.currentTheme.font), false);
         }
     }
 
@@ -77,48 +82,32 @@ public class WindowNewAction extends Window
             boolean persist = false;
             boolean isPlayer = false;
             NBTTagCompound tag = new NBTTagCompound();
-            Minecraft.getMinecraft().thePlayer.writeToNBT(tag);
+            Minecraft.getMinecraft().player.writeToNBT(tag);
             tag.setInteger("playerGameType", Minecraft.getMinecraft().playerController.getCurrentGameType().getID());
 
-            for(int i = 0; i < elements.size(); i++)
-            {
-                Element e = elements.get(i);
-                if(e instanceof ElementTextInput)
-                {
-                    ElementTextInput text = (ElementTextInput)e;
-                    if(text.id == 1)
-                    {
+            for (Element e : elements) {
+                if (e instanceof ElementTextInput) {
+                    ElementTextInput text = (ElementTextInput) e;
+                    if (text.id == 1) {
                         actName = text.textField.getText();
-                    }
-                    else if(text.id == 2)
-                    {
+                    } else if (text.id == 2) {
                         playerName = text.textField.getText();
                     }
-                }
-                else if(e instanceof ElementCheckBox)
-                {
-                    if(e.id == -1)
-                    {
-                        create = ((ElementCheckBox)e).toggledState;
+                } else if (e instanceof ElementCheckBox) {
+                    if (e.id == -1) {
+                        create = ((ElementCheckBox) e).toggledState;
+                    } else if (e.id == -2) {
+                        persist = ((ElementCheckBox) e).toggledState;
                     }
-                    else if(e.id == -2)
-                    {
-                        persist = ((ElementCheckBox)e).toggledState;
-                    }
-                }
-                else if(e instanceof ElementSelector)
-                {
-                    ElementSelector selector = (ElementSelector)e;
+                } else if (e instanceof ElementSelector) {
+                    ElementSelector selector = (ElementSelector) e;
                     Object obj = selector.choices.get(selector.selected);
-                    if(obj != null)
-                    {
-                        clzName = ((Class)obj).getName();
-                        if(EntityPlayer.class.isAssignableFrom((Class)obj))
-                        {
+                    if (obj != null) {
+                        clzName = ((Class) obj).getName();
+                        if (EntityPlayer.class.isAssignableFrom((Class) obj)) {
                             isPlayer = true;
-                            if(playerName.isEmpty())
-                            {
-                                playerName = Minecraft.getMinecraft().thePlayer.getName();
+                            if (playerName.isEmpty()) {
+                                playerName = Minecraft.getMinecraft().player.getName();
                             }
                         }
                     }

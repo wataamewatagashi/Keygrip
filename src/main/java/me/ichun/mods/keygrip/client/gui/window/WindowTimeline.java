@@ -1,5 +1,11 @@
 package me.ichun.mods.keygrip.client.gui.window;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.util.ResourceLocation;
+
+import java.util.Collections;
+
 import me.ichun.mods.ichunutil.client.gui.window.Window;
 import me.ichun.mods.ichunutil.client.gui.window.WindowPopup;
 import me.ichun.mods.ichunutil.client.gui.window.element.Element;
@@ -11,11 +17,6 @@ import me.ichun.mods.keygrip.common.Keygrip;
 import me.ichun.mods.keygrip.common.packet.PacketStopScene;
 import me.ichun.mods.keygrip.common.scene.Scene;
 import me.ichun.mods.keygrip.common.scene.action.Action;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.ResourceLocation;
-
-import java.util.Collections;
 
 public class WindowTimeline extends Window
 {
@@ -38,12 +39,12 @@ public class WindowTimeline extends Window
         elements.add(timeline);
 
         int button = 0;
-        elements.add(new ElementButtonTextured(this, 20 * button++ + 1, 80, ID_NEW_ACTION, true, 0, 1, "window.timeline.newAction", new ResourceLocation("keygrip", "textures/icon/newAction.png")));
-        elements.add(new ElementButtonTextured(this, 20 * button++ + 1, 80, ID_EDIT_ACTION, true, 0, 1, "window.timeline.editAction", new ResourceLocation("keygrip", "textures/icon/editAction.png")));
-        elements.add(new ElementButtonTextured(this, 20 * button++ + 1, 80, ID_DEL_ACTION, true, 0, 1, "window.timeline.delAction", new ResourceLocation("keygrip", "textures/icon/delAction.png")));
-        elements.add(new ElementButtonTextured(this, 20 * button++ + 1, 80, ID_REC_ACTION, true, 0, 1, "window.timeline.recAction", new ResourceLocation("keygrip", "textures/icon/recAction.png")));
-        elements.add(new ElementButtonTextured(this, 20 * button++ + 1, 80, ID_PLAY_SCENE, true, 0, 1, "window.timeline.playScene", new ResourceLocation("keygrip", "textures/icon/playScene.png")));
-        elements.add(new ElementButtonTextured(this, 20 * button++ + 1, 80, ID_STOP_SCENE, true, 0, 1, "window.timeline.stopScene", new ResourceLocation("keygrip", "textures/icon/stopScene.png")));
+        elements.add(new ElementButtonTextured(this, 20 * button++ + 1, 80, ID_NEW_ACTION, true, 0, 1, "window.timeline.newAction", new ResourceLocation("keygrip", "textures/icon/new_action.png")));
+        elements.add(new ElementButtonTextured(this, 20 * button++ + 1, 80, ID_EDIT_ACTION, true, 0, 1, "window.timeline.editAction", new ResourceLocation("keygrip", "textures/icon/edit_action.png")));
+        elements.add(new ElementButtonTextured(this, 20 * button++ + 1, 80, ID_DEL_ACTION, true, 0, 1, "window.timeline.delAction", new ResourceLocation("keygrip", "textures/icon/del_action.png")));
+        elements.add(new ElementButtonTextured(this, 20 * button++ + 1, 80, ID_REC_ACTION, true, 0, 1, "window.timeline.recAction", new ResourceLocation("keygrip", "textures/icon/rec_action.png")));
+        elements.add(new ElementButtonTextured(this, 20 * button++ + 1, 80, ID_PLAY_SCENE, true, 0, 1, "window.timeline.playScene", new ResourceLocation("keygrip", "textures/icon/play_scene.png")));
+        elements.add(new ElementButtonTextured(this, 20 * button++ + 1, 80, ID_STOP_SCENE, true, 0, 1, "window.timeline.stopScene", new ResourceLocation("keygrip", "textures/icon/stop_scene.png")));
     }
 
     @Override

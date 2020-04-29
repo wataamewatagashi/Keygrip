@@ -1,10 +1,11 @@
 package me.ichun.mods.keygrip.client.gui.window;
 
+import net.minecraft.util.ResourceLocation;
+
 import me.ichun.mods.ichunutil.client.gui.window.WindowTopDockBase;
 import me.ichun.mods.ichunutil.client.gui.window.element.Element;
 import me.ichun.mods.ichunutil.client.gui.window.element.ElementButtonTextured;
 import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
-import net.minecraft.util.ResourceLocation;
 
 public class WindowTopDock extends WindowTopDockBase
 {
@@ -27,8 +28,8 @@ public class WindowTopDock extends WindowTopDockBase
         elements.add(new ElementButtonTextured(this, 20 * button++, 0, ID_EDIT, true, 0, 0, "window.editScene.title", new ResourceLocation("keygrip", "textures/icon/edit.png")));
         elements.add(new ElementButtonTextured(this, 20 * button++, 0, ID_OPEN, true, 0, 0, "window.open.title", new ResourceLocation("keygrip", "textures/icon/open.png")));
         elements.add(new ElementButtonTextured(this, 20 * button++, 0, ID_SAVE, true, 0, 0, "topdock.save", new ResourceLocation("keygrip", "textures/icon/save.png")));
-        elements.add(new ElementButtonTextured(this, 20 * button++, 0, ID_SAVE_AS, true, 0, 0, "window.saveAs.title", new ResourceLocation("keygrip", "textures/icon/saveAs.png")));
-        elements.add(new ElementButtonTextured(this, 20 * button++, 0, ID_IMPORT_ACTION, true, 0, 0, "window.importAction.title", new ResourceLocation("keygrip", "textures/icon/importAction.png")));
+        elements.add(new ElementButtonTextured(this, 20 * button++, 0, ID_SAVE_AS, true, 0, 0, "window.saveAs.title", new ResourceLocation("keygrip", "textures/icon/save_as.png")));
+        elements.add(new ElementButtonTextured(this, 20 * button++, 0, ID_IMPORT_ACTION, true, 0, 0, "window.importAction.title", new ResourceLocation("keygrip", "textures/icon/import_action.png")));
     }
 
     @Override

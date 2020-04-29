@@ -1,5 +1,26 @@
 package me.ichun.mods.keygrip.client.core;
 
+import net.minecraft.block.BlockBed;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiChat;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+
+import org.lwjgl.input.Keyboard;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+
 import me.ichun.mods.ichunutil.client.keybind.KeyEvent;
 import me.ichun.mods.ichunutil.client.render.RendererHelper;
 import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
@@ -10,30 +31,11 @@ import me.ichun.mods.keygrip.common.scene.action.Action;
 import me.ichun.mods.keygrip.common.scene.action.ActionComponent;
 import me.ichun.mods.keygrip.common.scene.action.EntityState;
 import me.ichun.mods.keygrip.common.scene.action.LimbComponent;
-import net.minecraft.block.BlockBed;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiChat;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.translation.I18n;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import org.lwjgl.input.Keyboard;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
 
 public class EventHandlerClient
 {
     public final ResourceLocation txRec = new ResourceLocation("keygrip", "textures/icon/recording.png");
-    public final ResourceLocation txRecPulse = new ResourceLocation("keygrip", "textures/icon/recordingPulse.png");
+    public final ResourceLocation txRecPulse = new ResourceLocation("keygrip", "textures/icon/recording_pulse.png");
 
     public ArrayList<EntityPlayer> sleepers = new ArrayList<>();
 
@@ -56,7 +58,7 @@ public class EventHandlerClient
         Minecraft mc = Minecraft.getMinecraft();
         if(event.keyBind.isPressed())
         {
-            if(mc.theWorld != null)
+            if(mc.world != null)
             {
                 if((mc.currentScreen == null || mc.currentScreen instanceof GuiChat || mc.currentScreen instanceof GuiWorkspace))
                 {
@@ -125,7 +127,7 @@ public class EventHandlerClient
         if(event.phase == TickEvent.Phase.END)
         {
             Minecraft mc = Minecraft.getMinecraft();
-            if(actionToRecord != null && mc.theWorld != null)
+            if(actionToRecord != null && mc.world != null)
             {
                 int pX = 5;
                 int pY = 5;
@@ -138,11 +140,11 @@ public class EventHandlerClient
                 {
                     if(sceneFrom.playTime < actionToRecord.startKey + startRecordTime)
                     {
-                        mc.fontRendererObj.drawString(Integer.toString((int)(Math.ceil((actionToRecord.startKey - sceneFrom.playTime) / 20D))), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
+                        mc.fontRenderer.drawString(Integer.toString((int)(Math.ceil((actionToRecord.startKey - sceneFrom.playTime) / 20D))), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
                     }
                     else
                     {
-                        mc.fontRendererObj.drawString(I18n.translateToLocal("window.recording"), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
+                        mc.fontRenderer.drawString(I18n.format("window.recording"), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
                     }
                 }
                 GlStateManager.popMatrix();
@@ -151,13 +153,13 @@ public class EventHandlerClient
             for(int i = sleepers.size() - 1; i >= 0; i--)
             {
                 EntityPlayer player = sleepers.get(i);
-                if(player.worldObj != mc.theWorld)
+                if(player.world != mc.world)
                 {
                     sleepers.remove(i);
                     continue;
                 }
                 BlockPos pos = new BlockPos(Math.floor(player.posX), Math.floor(player.posY), Math.floor(player.posZ));
-                if(mc.theWorld.getBlockState(pos).getBlock() instanceof BlockBed)
+                if(mc.world.getBlockState(pos).getBlock() instanceof BlockBed)
                 {
                     player.bedLocation = pos;
                 }
@@ -173,32 +175,32 @@ public class EventHandlerClient
         {
             if(actionToRecord != null)
             {
-                if(mc.theWorld == null)
+                if(mc.world == null)
                 {
                     actionToRecord = null;
                     recordActionFrom = 0;
                 }
-                else if(dimension != mc.theWorld.provider.getDimension() || mc.thePlayer.isDead)
+                else if(dimension != mc.world.provider.getDimension() || mc.player.isDead)
                 {
                     workspace.toggleRecording();
                 }
             }
-            if(actionToRecord != null && !mc.isGamePaused() && startRecord && (Keygrip.config.playbackSceneWhileRecording == 1 && sceneFrom.playTime >= actionToRecord.startKey + startRecordTime || Keygrip.config.playbackSceneWhileRecording != 1))
+            if(actionToRecord != null && !mc.isGamePaused() && startRecord && (Keygrip.config.playbackSceneWhileRecording != 1 || sceneFrom.playTime >= actionToRecord.startKey + startRecordTime))
             {
-                ArrayList<ActionComponent> actions = new ArrayList<ActionComponent>();
+                ArrayList<ActionComponent> actions = new ArrayList<>();
 
                 if(!nextState.dropping && Keyboard.isKeyDown(mc.gameSettings.keyBindDrop.getKeyCode()))
                 {
                     //trying to drop
-                    ItemStack is = mc.thePlayer.getHeldItemMainhand();
-                    if(is != null)
+                    ItemStack is = mc.player.getHeldItemMainhand();
+                    if(is.isEmpty())
                     {
                         byte[] tag = null;
                         NBTTagCompound nbt = new NBTTagCompound();
                         is = is.copy();
                         if(!GuiScreen.isCtrlKeyDown())
                         {
-                            is.stackSize = 1;
+                            is.setCount(1);
                         }
                         is.writeToNBT(nbt);
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -238,14 +240,14 @@ public class EventHandlerClient
                     workspace.sceneSendingCooldown--;
                 }
             }
-            if(actionToRecord != null && !mc.isGamePaused() && startRecord && (Keygrip.config.playbackSceneWhileRecording == 1 && sceneFrom.playTime >= actionToRecord.startKey + startRecordTime || Keygrip.config.playbackSceneWhileRecording != 1))
+            if(actionToRecord != null && !mc.isGamePaused() && startRecord && (Keygrip.config.playbackSceneWhileRecording != 1 || sceneFrom.playTime >= actionToRecord.startKey + startRecordTime))
             {
-                nextState = new EntityState(mc.thePlayer);
+                nextState = new EntityState(mc.player);
 
                 double[] posChange = new double[] { nextState.pos[0] - ((actionToRecord.offsetPos[0] + sceneFrom.startPos[0]) / (double)Scene.PRECISION), nextState.pos[1] - ((actionToRecord.offsetPos[1] + sceneFrom.startPos[1]) / (double)Scene.PRECISION), nextState.pos[2] - ((actionToRecord.offsetPos[2] + sceneFrom.startPos[2]) / (double)Scene.PRECISION) };
                 double[] rotChange = new double[] { nextState.rot[0], nextState.rot[1] };
 
-                ArrayList<ActionComponent> actions = actionToRecord.actionComponents.containsKey(recordActionFrom) ? actionToRecord.actionComponents.get(recordActionFrom) : new ArrayList<ActionComponent>();
+                ArrayList<ActionComponent> actions = actionToRecord.actionComponents.containsKey(recordActionFrom) ? actionToRecord.actionComponents.get(recordActionFrom) : new ArrayList<>();
 
                 for(int i = 0; i < nextState.inventory.length; i++)
                 {
@@ -262,7 +264,7 @@ public class EventHandlerClient
                                 CompressedStreamTools.writeCompressed(nbt, baos);
                                 tag = baos.toByteArray();
                             }
-                            catch(IOException ioexception)
+                            catch(IOException ignored)
                             {
                             }
                         }
@@ -287,7 +289,7 @@ public class EventHandlerClient
                 }
                 if(nextState.health != prevState.health)
                 {
-                    actions.add(new ActionComponent(5, (int)Math.round(nextState.health * Scene.PRECISION), new byte[] { (byte)nextState.hurtTime, (byte)nextState.deathTime }));
+                    actions.add(new ActionComponent(5, Math.round(nextState.health * Scene.PRECISION), new byte[] { (byte)nextState.hurtTime, (byte)nextState.deathTime }));
                 }
                 if(nextState.fire != prevState.fire)
                 {
@@ -295,8 +297,8 @@ public class EventHandlerClient
                 }
                 if(nextState.sleeping != prevState.sleeping)
                 {
-                    BlockPos pos = new BlockPos(Math.floor(mc.thePlayer.posX), Math.floor(mc.thePlayer.posY), Math.floor(mc.thePlayer.posZ));
-                    actions.add(new ActionComponent(7, nextState.sleeping && mc.theWorld.getBlockState(pos).getBlock() instanceof BlockBed ? mc.theWorld.getBlockState(pos).getBlock().getBedDirection(mc.theWorld.getBlockState(pos), mc.theWorld, pos).ordinal() : 0, null));
+                    BlockPos pos = new BlockPos(Math.floor(mc.player.posX), Math.floor(mc.player.posY), Math.floor(mc.player.posZ));
+                    actions.add(new ActionComponent(7, nextState.sleeping && mc.world.getBlockState(pos).getBlock() instanceof BlockBed ? mc.world.getBlockState(pos).getBlock().getBedDirection(mc.world.getBlockState(pos), mc.world, pos).ordinal() : 0, null));
                 }
 
                 if(!(nextState.rot[0] == prevState.rot[0] && nextState.rot[1] == prevState.rot[1]))
