@@ -4,8 +4,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumFacing;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import java.lang.reflect.Field;
 
 import io.netty.buffer.ByteBuf;
 import me.ichun.mods.ichunutil.common.core.network.AbstractPacket;
@@ -16,6 +19,8 @@ public class PacketToggleSleeping extends AbstractPacket
     public int id;
     public boolean state;
     public int face;
+
+    private static Field sleeping = ObfuscationReflectionHelper.findField(EntityPlayer.class, "field_71083_bS");
 
     public PacketToggleSleeping() {}
 
@@ -61,9 +66,11 @@ public class PacketToggleSleeping extends AbstractPacket
         if(ent instanceof EntityPlayer)
         {
             EntityPlayer player = (EntityPlayer)ent;
-            //FIXME could not change sleep state
-//            player.sleeping = state;
-//            player.sleepTimer = 0;
+            try {
+                sleeping.set(player, true);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
 
             player.renderOffsetX = 0.0F;
             player.renderOffsetZ = 0.0F;
@@ -93,6 +100,11 @@ public class PacketToggleSleeping extends AbstractPacket
             }
             else
             {
+                try {
+                    sleeping.set(player, false);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
                 player.bedLocation = null;
                 Keygrip.eventHandlerClient.sleepers.remove(player);
             }
