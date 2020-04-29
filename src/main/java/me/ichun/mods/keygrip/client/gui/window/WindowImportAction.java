@@ -1,5 +1,15 @@
 package me.ichun.mods.keygrip.client.gui.window;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+
 import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
 import me.ichun.mods.ichunutil.client.gui.window.Window;
 import me.ichun.mods.ichunutil.client.gui.window.WindowPopup;
@@ -11,14 +21,6 @@ import me.ichun.mods.keygrip.client.core.ResourceHelper;
 import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
 import me.ichun.mods.keygrip.common.scene.Scene;
 import me.ichun.mods.keygrip.common.scene.action.Action;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.RandomStringUtils;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class WindowImportAction extends Window
 {
@@ -33,7 +35,7 @@ public class WindowImportAction extends Window
         modelList = new ElementListTree(this, BORDER_SIZE + 1, BORDER_SIZE + 1 + 10, width - (BORDER_SIZE * 2 + 2), height - BORDER_SIZE - 22 - 16, 3, false, false);
         elements.add(modelList);
 
-        ArrayList<File> files = new ArrayList<File>();
+        ArrayList<File> files = new ArrayList<>();
 
         File[] textures = ResourceHelper.getActionsDir().listFiles();
 
@@ -79,7 +81,7 @@ public class WindowImportAction extends Window
                         //TODO remember to doc down that importing refs the player.
                         if(!GuiScreen.isShiftKeyDown())
                         {
-                            action.offsetPos = new int[] { (int)Math.round(mc.thePlayer.posX * Scene.PRECISION) - scene.startPos[0], (int)Math.round(mc.thePlayer.posY * Scene.PRECISION) - scene.startPos[1], (int)Math.round(mc.thePlayer.posZ * Scene.PRECISION) - scene.startPos[2] };
+                            action.offsetPos = new int[] { (int)Math.round(mc.player.posX * Scene.PRECISION) - scene.startPos[0], (int)Math.round(mc.player.posY * Scene.PRECISION) - scene.startPos[1], (int)Math.round(mc.player.posZ * Scene.PRECISION) - scene.startPos[2] };
                         }
                         scene.actions.add(action);
                         Collections.sort(scene.actions);

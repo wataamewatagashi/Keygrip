@@ -2,14 +2,7 @@ package me.ichun.mods.keygrip.common.scene;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import me.ichun.mods.ichunutil.client.gui.window.WindowPopup;
-import me.ichun.mods.ichunutil.common.core.util.IOUtil;
-import me.ichun.mods.keygrip.client.core.ResourceHelper;
-import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
-import me.ichun.mods.keygrip.common.Keygrip;
-import me.ichun.mods.keygrip.common.packet.PacketSceneFragment;
-import me.ichun.mods.keygrip.common.scene.action.Action;
-import me.ichun.mods.keygrip.common.scene.action.LimbComponent;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -18,6 +11,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -27,6 +21,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+
+import me.ichun.mods.ichunutil.client.gui.window.WindowPopup;
+import me.ichun.mods.ichunutil.common.core.util.IOUtil;
+import me.ichun.mods.keygrip.client.core.ResourceHelper;
+import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
+import me.ichun.mods.keygrip.common.Keygrip;
+import me.ichun.mods.keygrip.common.packet.PacketSceneFragment;
+import me.ichun.mods.keygrip.common.scene.action.Action;
+import me.ichun.mods.keygrip.common.scene.action.LimbComponent;
 
 public class Scene
 {
@@ -42,7 +45,7 @@ public class Scene
     public int version = VERSION;
 
     @SerializedName("a")
-    public ArrayList<Action> actions = new ArrayList<Action>();//sort the list after
+    public ArrayList<Action> actions = new ArrayList<>();//sort the list after
     @SerializedName("s")
     public int[] startPos = new int[3];
 
@@ -74,7 +77,7 @@ public class Scene
                         {
                             if(playTime == 5 && a.precreateEntity == 1 && a.state != null && a.state.ent != null)
                             {
-                                FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityTeleport(a.state.ent), a.state.ent.worldObj.provider.getDimension());
+                                FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityTeleport(a.state.ent), a.state.ent.world.provider.getDimension());
                             }
                             continue;
                         }
@@ -91,7 +94,7 @@ public class Scene
                                     else
                                     {
                                         a.state.ent.setLocationAndAngles((startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION, a.rotation[0] / (float)PRECISION, a.rotation[1] / (float)PRECISION);
-                                        server.spawnEntityInWorld(a.state.ent);
+                                        server.spawnEntity(a.state.ent);
                                         if(a.state.ent instanceof EntityPlayer)
                                         {
                                             server.playerEntities.remove(a.state.ent);
@@ -113,7 +116,7 @@ public class Scene
                         a.doAction(this, playTime);
                         if(playTime - a.startKey == 5 && a.state != null && a.state.ent != null && a.precreateEntity != 1)
                         {
-                            FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityTeleport(a.state.ent), a.state.ent.worldObj.provider.getDimension());
+                            FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityTeleport(a.state.ent), a.state.ent.world.provider.getDimension());
                         }
                     }
                 }
@@ -144,7 +147,7 @@ public class Scene
             {
                 continue;
             }
-            if(playTime < a.startKey && a.precreateEntity == 1 || playTime >= a.startKey)
+            if(playTime >= a.startKey || a.precreateEntity == 1)
             {
                 //create the related entity
                 if(a.createState(world, (startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION))
@@ -157,7 +160,7 @@ public class Scene
                     {
                         a.state.ent.setLocationAndAngles((startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION, a.rotation[0] / (float)PRECISION, a.rotation[1] / (float)PRECISION);
 
-                        world.spawnEntityInWorld(a.state.ent);
+                        world.spawnEntity(a.state.ent);
                         if(a.state.ent instanceof EntityPlayer)
                         {
                             world.playerEntities.remove(a.state.ent);
@@ -187,8 +190,8 @@ public class Scene
                         }
                         if(lastLook != null)
                         {
-                            a.state.ent.rotationYawHead = a.state.ent.rotationYaw = lastLook.actionChange[0] / Scene.PRECISION;
-                            a.state.ent.rotationPitch = lastLook.actionChange[1] / Scene.PRECISION;
+                            a.state.ent.rotationYawHead = a.state.ent.rotationYaw = (float) lastLook.actionChange[0] / Scene.PRECISION;
+                            a.state.ent.rotationPitch = (float) lastLook.actionChange[1] / Scene.PRECISION;
                         }
                         if(lastPos != null)
                         {
@@ -270,9 +273,9 @@ public class Scene
 
             return scene;
         }
-        catch(IOException ignored)
+        catch(IOException e)
         {
-            ignored.printStackTrace();
+            e.printStackTrace();
         }
         return null;
     }
@@ -297,7 +300,7 @@ public class Scene
 
     public static void saveSceneActions(Scene scene)
     {
-        ArrayList<String> actNames = new ArrayList<String>();
+        ArrayList<String> actNames = new ArrayList<>();
         for(Action action : scene.actions)
         {
             try
@@ -327,7 +330,7 @@ public class Scene
     @SideOnly(Side.CLIENT)
     public static void sendSceneToServer(Scene scene)
     {
-        File temp = new File(ResourceHelper.getTempDir(), Integer.toString(Math.abs(scene.hashCode())) + "-send.kgs");
+        File temp = new File(ResourceHelper.getTempDir(), Math.abs(scene.hashCode()) + "-send.kgs");
 
         if(Scene.saveScene(scene, temp))
         {
@@ -345,7 +348,7 @@ public class Scene
                 int offset = 0;
                 while(fileSize > 0)
                 {
-                    byte[] fileBytes = new byte[fileSize > maxFile ? maxFile : fileSize];
+                    byte[] fileBytes = new byte[Math.min(fileSize, maxFile)];
                     int index = 0;
                     while(index < fileBytes.length) //from index 0 to 31999
                     {
@@ -366,7 +369,7 @@ public class Scene
                         }
                     }
 
-                    Keygrip.channel.sendToServer(new PacketSceneFragment(time, scene.identifier, packetsToSend, packetCount, fileSize > maxFile ? maxFile : fileSize, fileBytes));
+                    Keygrip.channel.sendToServer(new PacketSceneFragment(time, scene.identifier, packetsToSend, packetCount, Math.min(fileSize, maxFile), fileBytes));
 
                     packetCount++;
                     fileSize -= maxFile;

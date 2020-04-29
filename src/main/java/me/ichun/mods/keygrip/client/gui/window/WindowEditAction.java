@@ -1,22 +1,29 @@
 package me.ichun.mods.keygrip.client.gui.window;
 
 import com.google.common.base.Splitter;
-import me.ichun.mods.ichunutil.client.gui.Theme;
-import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
-import me.ichun.mods.ichunutil.client.gui.window.Window;
-import me.ichun.mods.ichunutil.client.gui.window.element.*;
-import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
-import me.ichun.mods.keygrip.common.scene.Scene;
-import me.ichun.mods.keygrip.common.scene.action.Action;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.text.translation.I18n;
+import net.minecraftforge.fml.common.registry.EntityEntry;
 
 import java.util.Collections;
+
+import me.ichun.mods.ichunutil.client.gui.Theme;
+import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
+import me.ichun.mods.ichunutil.client.gui.window.Window;
+import me.ichun.mods.ichunutil.client.gui.window.element.Element;
+import me.ichun.mods.ichunutil.client.gui.window.element.ElementButton;
+import me.ichun.mods.ichunutil.client.gui.window.element.ElementCheckBox;
+import me.ichun.mods.ichunutil.client.gui.window.element.ElementNumberInput;
+import me.ichun.mods.ichunutil.client.gui.window.element.ElementSelector;
+import me.ichun.mods.ichunutil.client.gui.window.element.ElementTextInput;
+import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
+import me.ichun.mods.keygrip.common.scene.Scene;
+import me.ichun.mods.keygrip.common.scene.action.Action;
 
 public class WindowEditAction extends Window
 {
@@ -41,9 +48,9 @@ public class WindowEditAction extends Window
         elements.add(new ElementTextInput(this, 10, 135, width - 20, 12, 2, "window.newAction.playerName", action != null && action.entityType != null && action.entityType.startsWith("player::") ? action.entityType.substring("player::".length()) : ""));
         ElementSelector selector = new ElementSelector(this, 10, 65, width - 20, 12, -2, "window.newAction.entityType", "EntityPlayer");
 
-        for(Object o : EntityList.NAME_TO_CLASS.values())
+        for (EntityEntry o : net.minecraftforge.registries.GameData.getEntityRegistry())
         {
-            Class<? extends Entity> clz = (Class)o;
+            Class<? extends Entity> clz = o.getEntityClass();
             if(EntityLivingBase.class.isAssignableFrom(clz) && Minecraft.getMinecraft().getRenderManager().getEntityClassRenderObject(clz) instanceof RenderLivingBase)
             {
                 selector.choices.put(clz.getSimpleName(), clz);
@@ -141,7 +148,7 @@ public class WindowEditAction extends Window
                             isPlayer = true;
                             if(playerName.isEmpty())
                             {
-                                playerName = Minecraft.getMinecraft().thePlayer.getName();
+                                playerName = Minecraft.getMinecraft().player.getName();
                             }
                         }
                     }

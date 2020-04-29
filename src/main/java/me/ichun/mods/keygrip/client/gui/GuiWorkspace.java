@@ -1,6 +1,26 @@
 package me.ichun.mods.keygrip.client.gui;
 
 import com.google.gson.Gson;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.NBTTagCompound;
+
+import org.apache.commons.lang3.RandomStringUtils;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
+
 import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
 import me.ichun.mods.ichunutil.client.gui.window.Window;
 import me.ichun.mods.ichunutil.client.gui.window.WindowPopup;
@@ -20,24 +40,6 @@ import me.ichun.mods.keygrip.common.scene.action.Action;
 import me.ichun.mods.keygrip.common.scene.action.ActionComponent;
 import me.ichun.mods.keygrip.common.scene.action.EntityState;
 import me.ichun.mods.keygrip.common.scene.action.LimbComponent;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.text.translation.I18n;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.GL11;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
 
 public class GuiWorkspace extends IWorkspace
 {
@@ -154,7 +156,7 @@ public class GuiWorkspace extends IWorkspace
             GlStateManager.pushMatrix();
             float scale = 2.0F;
             GlStateManager.scale(scale, scale, scale);
-            mc.fontRendererObj.drawString(I18n.translateToLocal("window.recording"), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
+            mc.fontRenderer.drawString(I18n.format("window.recording"), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
             GlStateManager.popMatrix();
         }
 
@@ -233,7 +235,7 @@ public class GuiWorkspace extends IWorkspace
                         timeline.timeline.selectedIdentifier = action.identifier;
                         if(!GuiScreen.isShiftKeyDown())
                         {
-                            action.offsetPos = new int[] { (int)Math.round(mc.thePlayer.posX * Scene.PRECISION) - scene.startPos[0], (int)Math.round(mc.thePlayer.posY * Scene.PRECISION) - scene.startPos[1], (int)Math.round(mc.thePlayer.posZ * Scene.PRECISION) - scene.startPos[2] };
+                            action.offsetPos = new int[] { (int)Math.round(mc.player.posX * Scene.PRECISION) - scene.startPos[0], (int)Math.round(mc.player.posY * Scene.PRECISION) - scene.startPos[1], (int)Math.round(mc.player.posZ * Scene.PRECISION) - scene.startPos[2] };
                         }
                         scene.actions.add(action);
                         Collections.sort(scene.actions);
@@ -271,7 +273,7 @@ public class GuiWorkspace extends IWorkspace
     {
         if(key == 1)
         {
-            this.mc.displayGuiScreen((GuiScreen)null);
+            this.mc.displayGuiScreen(null);
 
             if(this.mc.currentScreen == null)
             {
@@ -350,12 +352,12 @@ public class GuiWorkspace extends IWorkspace
                         }
                         if(Keygrip.eventHandlerClient.recordActionFrom == 0)
                         {
-                            Keygrip.eventHandlerClient.actionToRecord.offsetPos = new int[] { (int)Math.round(mc.thePlayer.posX * Scene.PRECISION) - scene.startPos[0], (int)Math.round(mc.thePlayer.posY * Scene.PRECISION) - scene.startPos[1], (int)Math.round(mc.thePlayer.posZ * Scene.PRECISION) - scene.startPos[2] };
-                            Keygrip.eventHandlerClient.actionToRecord.rotation = new int[] { (int)Math.round(mc.thePlayer.rotationYaw * Scene.PRECISION), (int)Math.round(mc.thePlayer.rotationPitch * Scene.PRECISION) };
+                            Keygrip.eventHandlerClient.actionToRecord.offsetPos = new int[] { (int)Math.round(mc.player.posX * Scene.PRECISION) - scene.startPos[0], (int)Math.round(mc.player.posY * Scene.PRECISION) - scene.startPos[1], (int)Math.round(mc.player.posZ * Scene.PRECISION) - scene.startPos[2] };
+                            Keygrip.eventHandlerClient.actionToRecord.rotation = new int[] {Math.round(mc.player.rotationYaw * Scene.PRECISION), Math.round(mc.player.rotationPitch * Scene.PRECISION)};
                             NBTTagCompound tag = new NBTTagCompound();
-                            Minecraft.getMinecraft().thePlayer.writeToNBT(tag);
+                            Minecraft.getMinecraft().player.writeToNBT(tag);
                             tag.setInteger("playerGameType", Minecraft.getMinecraft().playerController.getCurrentGameType().getID());
-                            if(tag != null)
+                            if(tag.isEmpty())
                             {
                                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                                 try
@@ -363,7 +365,7 @@ public class GuiWorkspace extends IWorkspace
                                     CompressedStreamTools.writeCompressed(tag, baos);
                                     a.nbtToRead = baos.toByteArray();
                                 }
-                                catch(IOException ioexception)
+                                catch(IOException ignored)
                                 {
                                 }
                             }
@@ -400,38 +402,13 @@ public class GuiWorkspace extends IWorkspace
                             {
                                 lastPos = new LimbComponent(0, 0, 0);
                             }
-                            mc.thePlayer.setLocationAndAngles((lastPos.actionChange[0] + (a.offsetPos[0] + scene.startPos[0])) / (double)Scene.PRECISION, (lastPos.actionChange[1] + (a.offsetPos[1] + scene.startPos[1])) / (double)Scene.PRECISION, (lastPos.actionChange[2] + (a.offsetPos[2] + scene.startPos[2])) / (double)Scene.PRECISION, lastLook.actionChange[0] / Scene.PRECISION, lastLook.actionChange[1] / Scene.PRECISION);
+                            mc.player.setLocationAndAngles((lastPos.actionChange[0] + (a.offsetPos[0] + scene.startPos[0])) / (double)Scene.PRECISION, (lastPos.actionChange[1] + (a.offsetPos[1] + scene.startPos[1])) / (double)Scene.PRECISION, (lastPos.actionChange[2] + (a.offsetPos[2] + scene.startPos[2])) / (double)Scene.PRECISION, (float) lastLook.actionChange[0] / Scene.PRECISION, (float) lastLook.actionChange[1] / Scene.PRECISION);
                         }
-                        Keygrip.eventHandlerClient.prevState = new EntityState(Minecraft.getMinecraft().thePlayer);
-                        Keygrip.eventHandlerClient.nextState = new EntityState(Minecraft.getMinecraft().thePlayer);
-                        Keygrip.eventHandlerClient.dimension = Minecraft.getMinecraft().theWorld.provider.getDimension();
-                        Iterator<Map.Entry<Integer, ArrayList<ActionComponent>>> ite = a.actionComponents.entrySet().iterator();
-                        while(ite.hasNext())
-                        {
-                            Map.Entry<Integer, ArrayList<ActionComponent>> e = ite.next();
-                            if(e.getKey() >= Keygrip.eventHandlerClient.recordActionFrom)
-                            {
-                                ite.remove();
-                            }
-                        }
-                        Iterator<Map.Entry<Integer, LimbComponent>> ite1 = a.lookComponents.entrySet().iterator();
-                        while(ite1.hasNext())
-                        {
-                            Map.Entry<Integer, LimbComponent> e = ite1.next();
-                            if(e.getKey() >= Keygrip.eventHandlerClient.recordActionFrom)
-                            {
-                                ite1.remove();
-                            }
-                        }
-                        ite1 = a.posComponents.entrySet().iterator();
-                        while(ite1.hasNext())
-                        {
-                            Map.Entry<Integer, LimbComponent> e = ite1.next();
-                            if(e.getKey() >= Keygrip.eventHandlerClient.recordActionFrom)
-                            {
-                                ite1.remove();
-                            }
-                        }
+                        Keygrip.eventHandlerClient.prevState = new EntityState(Minecraft.getMinecraft().player);
+                        Keygrip.eventHandlerClient.nextState = new EntityState(Minecraft.getMinecraft().player);
+                        Keygrip.eventHandlerClient.dimension = Minecraft.getMinecraft().world.provider.getDimension();
+                        a.actionComponents.entrySet().removeIf(e -> e.getKey() >= Keygrip.eventHandlerClient.recordActionFrom);
+                        a.posComponents.entrySet().removeIf(e -> e.getKey() >= Keygrip.eventHandlerClient.recordActionFrom);
                         break;
                     }
                 }

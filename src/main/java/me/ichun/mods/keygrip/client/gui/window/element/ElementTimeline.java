@@ -1,5 +1,11 @@
 package me.ichun.mods.keygrip.client.gui.window.element;
 
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.math.MathHelper;
+
+import org.lwjgl.input.Mouse;
+
 import me.ichun.mods.ichunutil.client.gui.Theme;
 import me.ichun.mods.ichunutil.client.gui.window.Window;
 import me.ichun.mods.ichunutil.client.gui.window.element.Element;
@@ -7,10 +13,6 @@ import me.ichun.mods.ichunutil.client.render.RendererHelper;
 import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
 import me.ichun.mods.keygrip.common.scene.Scene;
 import me.ichun.mods.keygrip.common.scene.action.Action;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.math.MathHelper;
-import org.lwjgl.input.Mouse;
 
 public class ElementTimeline extends Element
 {
@@ -80,7 +82,7 @@ public class ElementTimeline extends Element
         boolean hasScrollHori = timeWidth + 20 > Math.floor((float)(width - buttonsWidth) / (float)tickWidth);
 
         GlStateManager.pushMatrix();
-        GlStateManager.translate(0D, (double)-((size - (height - 20)) * sliderProgVert), 0D);
+        GlStateManager.translate(0D, -((size - (height - 20)) * sliderProgVert), 0D);
 
         //draw animation elements
         if(currentScene != null)
@@ -127,22 +129,21 @@ public class ElementTimeline extends Element
 
             int timelineWidth = hasScrollVert ? (width - 10) : width;
 
-            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBarBorder[0], parent.workspace.currentTheme.elementTreeScrollBarBorder[1], parent.workspace.currentTheme.elementTreeScrollBarBorder[2], 255, getPosX() + buttonsWidth + ((timelineWidth - buttonsWidth) / 40), x2 + 4, (timelineWidth - buttonsWidth) - (((timelineWidth - buttonsWidth) / 40) * 2), 2, 0);
+            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBarBorder[0], parent.workspace.currentTheme.elementTreeScrollBarBorder[1], parent.workspace.currentTheme.elementTreeScrollBarBorder[2], 255, getPosX() + buttonsWidth + ((double) (timelineWidth - buttonsWidth) / 40), x2 + 4, (timelineWidth - buttonsWidth) - (((double) (timelineWidth - buttonsWidth) / 40) * 2), 2, 0);
 
-            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBarBorder[0], parent.workspace.currentTheme.elementTreeScrollBarBorder[1], parent.workspace.currentTheme.elementTreeScrollBarBorder[2], 255, getPosX() + buttonsWidth + (((timelineWidth - buttonsWidth) - ((timelineWidth - buttonsWidth) / 11)) * sliderProgHori), x2, Math.floor((float)(timelineWidth - buttonsWidth) / 11D), 10, 0);
-            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBar[0], parent.workspace.currentTheme.elementTreeScrollBar[1], parent.workspace.currentTheme.elementTreeScrollBar[2], 255, getPosX() + buttonsWidth + 1 + (((timelineWidth - buttonsWidth) - ((timelineWidth - buttonsWidth) / 11)) * sliderProgHori), x2 + 1, Math.floor(((float)(timelineWidth - buttonsWidth) / 11D) - 2), 8, 0);
+            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBarBorder[0], parent.workspace.currentTheme.elementTreeScrollBarBorder[1], parent.workspace.currentTheme.elementTreeScrollBarBorder[2], 255, getPosX() + buttonsWidth + (((timelineWidth - buttonsWidth) - ((double) (timelineWidth - buttonsWidth) / 11)) * sliderProgHori), x2, Math.floor((float)(timelineWidth - buttonsWidth) / 11D), 10, 0);
+            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBar[0], parent.workspace.currentTheme.elementTreeScrollBar[1], parent.workspace.currentTheme.elementTreeScrollBar[2], 255, getPosX() + buttonsWidth + 1 + (((timelineWidth - buttonsWidth) - ((double) (timelineWidth - buttonsWidth) / 11)) * sliderProgHori), x2 + 1, Math.floor(((float)(timelineWidth - buttonsWidth) / 11D) - 2), 8, 0);
 
             int sbx1 = getPosX() + buttonsWidth - parent.posX;
             int sbx2 = getPosX() + 1 + timelineWidth - parent.posX;
             int sby1 = x2 + 1 - parent.posY;
-            ;
             int sby2 = sby1 + 10;
 
             if(Mouse.isButtonDown(0) && mouseX >= sbx1 && mouseX <= sbx2 && mouseY >= sby1 && mouseY <= sby2)
             {
                 sbx1 += 10;
                 sbx2 -= 10;
-                sliderProgHori = 1.0F - MathHelper.clamp_double((double)(sbx2 - mouseX) / (double)(sbx2 - sbx1), 0.0D, 1.0D);
+                sliderProgHori = 1.0F - MathHelper.clamp((double)(sbx2 - mouseX) / (double)(sbx2 - sbx1), 0.0D, 1.0D);
             }
         }
         else
@@ -178,7 +179,7 @@ public class ElementTimeline extends Element
         RendererHelper.startGlScissor(getPosX() + buttonsWidth, getPosY(), width - (hasScrollVert ? buttonsWidth + 10 : buttonsWidth), height - 20);
 
         GlStateManager.pushMatrix();
-        GlStateManager.translate(0D, (double)-((size - (height - 20)) * sliderProgVert), 0D);
+        GlStateManager.translate(0D, -((size - (height - 20)) * sliderProgVert), 0D);
 
         //Animation Component areas
         if(currentScene != null)
@@ -245,11 +246,11 @@ public class ElementTimeline extends Element
 
         if(currentPos % 5 != 0)
         {
-            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeItemBorder[0], parent.workspace.currentTheme.elementTreeItemBorder[1], parent.workspace.currentTheme.elementTreeItemBorder[2], 255, (getPosX() + buttonsWidth - 1 + (currentPos * tickWidth)) - (parent.workspace.getFontRenderer().getStringWidth(Integer.toString(currentPos)) / 2) * 0.5F, getPosY() + height - 17, parent.workspace.getFontRenderer().getStringWidth(Integer.toString(currentPos)) / 2 + 2, 5, 0);//blocks underlying number
+            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeItemBorder[0], parent.workspace.currentTheme.elementTreeItemBorder[1], parent.workspace.currentTheme.elementTreeItemBorder[2], 255, (getPosX() + buttonsWidth - 1 + (currentPos * tickWidth)) - ((double) parent.workspace.getFontRenderer().getStringWidth(Integer.toString(currentPos)) / 2) * 0.5F, getPosY() + height - 17, (double) parent.workspace.getFontRenderer().getStringWidth(Integer.toString(currentPos)) / 2 + 2, 5, 0);//blocks underlying number
             GlStateManager.pushMatrix();
             float scale = 0.5F;
             GlStateManager.scale(scale, scale, scale);
-            parent.workspace.getFontRenderer().drawString(Integer.toString(currentPos), (int)((getPosX() + buttonsWidth + (currentPos * tickWidth)) / scale) - parent.workspace.getFontRenderer().getStringWidth(Integer.toString(currentPos)) / 2, (int)((getPosY() + height - 16) / scale), Theme.getAsHex(parent.workspace.currentTheme.font), false);
+            parent.workspace.getFontRenderer().drawString(Integer.toString(currentPos), (int)((getPosX() + buttonsWidth + (currentPos * tickWidth)) / scale) - (float) parent.workspace.getFontRenderer().getStringWidth(Integer.toString(currentPos)) / 2, (int)((getPosY() + height - 16) / scale), Theme.getAsHex(parent.workspace.currentTheme.font), false);
             GlStateManager.popMatrix();
         }
 
@@ -265,10 +266,10 @@ public class ElementTimeline extends Element
 
             RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeItemBorder[0], parent.workspace.currentTheme.elementTreeItemBorder[1], parent.workspace.currentTheme.elementTreeItemBorder[2], 255, x2, getPosY(), 10, height - 19, 0);
 
-            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBarBorder[0], parent.workspace.currentTheme.elementTreeScrollBarBorder[1], parent.workspace.currentTheme.elementTreeScrollBarBorder[2], 255, x2 + 4, getPosY() + ((height - 20) / 40), 2, (height - 20) - (((height - 20) / 40) * 2), 0);
+            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBarBorder[0], parent.workspace.currentTheme.elementTreeScrollBarBorder[1], parent.workspace.currentTheme.elementTreeScrollBarBorder[2], 255, x2 + 4, getPosY() + ((double) (height - 20) / 40), 2, (height - 20) - ((double) ((height - 20) / 40) * 2), 0);
 
-            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBarBorder[0], parent.workspace.currentTheme.elementTreeScrollBarBorder[1], parent.workspace.currentTheme.elementTreeScrollBarBorder[2], 255, x2, getPosY() + (((height - 20) - ((height - 20) / 11)) * sliderProgVert), 10, Math.ceil((float)(height - 20) / 10D), 0);
-            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBar[0], parent.workspace.currentTheme.elementTreeScrollBar[1], parent.workspace.currentTheme.elementTreeScrollBar[2], 255, x2 + 1, getPosY() + 1 + (((height - 20) - ((height - 20) / 11)) * sliderProgVert), 8, Math.ceil(((float)(height - 20) / 10D) - 2), 0);
+            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBarBorder[0], parent.workspace.currentTheme.elementTreeScrollBarBorder[1], parent.workspace.currentTheme.elementTreeScrollBarBorder[2], 255, x2, getPosY() + (((height - 20) - ((double) (height - 20) / 11)) * sliderProgVert), 10, Math.ceil((float)(height - 20) / 10D), 0);
+            RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBar[0], parent.workspace.currentTheme.elementTreeScrollBar[1], parent.workspace.currentTheme.elementTreeScrollBar[2], 255, x2 + 1, getPosY() + 1 + (((height - 20) - ((double) (height - 20) / 11)) * sliderProgVert), 8, Math.ceil(((float)(height - 20) / 10D) - 2), 0);
 
             int sbx1 = x2 + 1 - parent.posX;
             int sbx2 = sbx1 + 10;
@@ -279,7 +280,7 @@ public class ElementTimeline extends Element
             {
                 sby1 += 10;
                 sby2 -= 10;
-                sliderProgVert = 1.0F - MathHelper.clamp_double((double)(sby2 - mouseY) / (double)(sby2 - sby1), 0.0D, 1.0D);
+                sliderProgVert = 1.0F - MathHelper.clamp((double)(sby2 - mouseY) / (double)(sby2 - sby1), 0.0D, 1.0D);
             }
         }
         else
@@ -304,7 +305,7 @@ public class ElementTimeline extends Element
         if(mouseX < posX + 100)
         {
             //get total animation element height
-            int size = 0;
+            int size;
             Scene currentScene = null;
 
             if(((GuiWorkspace)parent.workspace).hasOpenScene())
@@ -370,7 +371,7 @@ public class ElementTimeline extends Element
             if(timeWidth + 20 > Math.floor((float)(width - 101) / (float)tickWidth))
             {
                 sliderProgHori += 0.05D * -k;
-                sliderProgHori = MathHelper.clamp_double(sliderProgHori, 0.0D, 1.0D);
+                sliderProgHori = MathHelper.clamp(sliderProgHori, 0.0D, 1.0D);
             }
         }
         else
@@ -378,7 +379,7 @@ public class ElementTimeline extends Element
             if(size > height - 20)
             {
                 sliderProgVert += 0.05D * -k;
-                sliderProgVert = MathHelper.clamp_double(sliderProgVert, 0.0D, 1.0D);
+                sliderProgVert = MathHelper.clamp(sliderProgVert, 0.0D, 1.0D);
             }
         }
 
@@ -390,7 +391,7 @@ public class ElementTimeline extends Element
         int totalWidth = 0;
         boolean hasScrollVert = false;
 
-        Scene currentScene = null;
+        Scene currentScene;
 
         if(!((GuiWorkspace)parent.workspace).sceneManager.scenes.isEmpty())
         {
@@ -420,7 +421,7 @@ public class ElementTimeline extends Element
             int hiddenWidth = totalWidth - elementWidth;
             if(tickerPos > elementWidth + sliderProgHori * hiddenWidth || tickerPos < hiddenWidth * sliderProgHori)
             {
-                sliderProgHori = MathHelper.clamp_double((tickerPos - (elementWidth / 3D)) / (double)hiddenWidth, 0.0D, 1.0D);
+                sliderProgHori = MathHelper.clamp((tickerPos - (elementWidth / 3D)) / (double)hiddenWidth, 0.0D, 1.0D);
             }
         }
     }

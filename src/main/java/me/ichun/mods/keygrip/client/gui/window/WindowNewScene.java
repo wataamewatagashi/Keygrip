@@ -1,5 +1,8 @@
 package me.ichun.mods.keygrip.client.gui.window;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.I18n;
+
 import me.ichun.mods.ichunutil.client.gui.Theme;
 import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
 import me.ichun.mods.ichunutil.client.gui.window.Window;
@@ -8,8 +11,6 @@ import me.ichun.mods.ichunutil.client.gui.window.element.ElementButton;
 import me.ichun.mods.ichunutil.client.gui.window.element.ElementTextInput;
 import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
 import me.ichun.mods.keygrip.common.scene.Scene;
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.text.translation.I18n;
 
 public class WindowNewScene extends Window
 {
@@ -29,7 +30,7 @@ public class WindowNewScene extends Window
         super.draw(mouseX, mouseY);
         if(!minimized)
         {
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.newScene.name"), posX + 11, posY + 20, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.newScene.name"), posX + 11, posY + 20, Theme.getAsHex(workspace.currentTheme.font), false);
         }
     }
 
@@ -43,13 +44,10 @@ public class WindowNewScene extends Window
         if(element.id > 0)
         {
             String projName = "";
-            for(int i = 0; i < elements.size(); i++)
-            {
-                if(elements.get(i) instanceof ElementTextInput)
-                {
-                    ElementTextInput text = (ElementTextInput)elements.get(i);
-                    if(text.id == 1)
-                    {
+            for (Element value : elements) {
+                if (value instanceof ElementTextInput) {
+                    ElementTextInput text = (ElementTextInput) value;
+                    if (text.id == 1) {
                         projName = text.textField.getText();
                     }
                 }
@@ -61,7 +59,7 @@ public class WindowNewScene extends Window
             Scene scene = new Scene(projName);
             ((GuiWorkspace)workspace).sceneManager.addScene(scene);
             Minecraft mc = Minecraft.getMinecraft();
-            scene.startPos = new int[] { (int)Math.round(mc.thePlayer.posX * Scene.PRECISION), (int)Math.round(mc.thePlayer.posY * Scene.PRECISION), (int)Math.round(mc.thePlayer.posZ * Scene.PRECISION) };
+            scene.startPos = new int[] { (int)Math.round(mc.player.posX * Scene.PRECISION), (int)Math.round(mc.player.posY * Scene.PRECISION), (int)Math.round(mc.player.posZ * Scene.PRECISION) };
             workspace.removeWindow(this, true);
         }
     }
