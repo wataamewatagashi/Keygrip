@@ -68,9 +68,7 @@ public class PacketToggleSleeping extends AbstractPacket
             EntityPlayer player = (EntityPlayer)ent;
             try {
                 sleeping.set(player, true);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
+            } catch (IllegalAccessException ignored) {}
 
             player.renderOffsetX = 0.0F;
             player.renderOffsetZ = 0.0F;
@@ -102,9 +100,7 @@ public class PacketToggleSleeping extends AbstractPacket
             {
                 try {
                     sleeping.set(player, false);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+                } catch (IllegalAccessException ignored) {}
                 player.bedLocation = null;
                 Keygrip.eventHandlerClient.sleepers.remove(player);
             }
