@@ -5,6 +5,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+
 import org.lwjgl.input.Keyboard;
 
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class EntityState
 
         dropping = Keyboard.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindDrop.getKeyCode());
 
-        inventory = new ItemStack[] { player.inventory.getCurrentItem(), player.inventory.armorItemInSlot(0), player.inventory.armorItemInSlot(1), player.inventory.armorItemInSlot(2), player.inventory.armorItemInSlot(3) };
+        inventory = new ItemStack[] { player.inventory.getCurrentItem(), player.inventory.armorItemInSlot(0), player.inventory.armorItemInSlot(1), player.inventory.armorItemInSlot(2), player.inventory.armorItemInSlot(3), player.inventory.offHandInventory.get(0) };
 
         health = player.getHealth();
         hurtTime = player.hurtTime;
@@ -43,13 +44,15 @@ public class EntityState
         sneaking = player.isSneaking();
 
         sleeping = player.isPlayerSleeping();
+
+        elytraFlying = player.isElytraFlying();
     }
 
     public EntityLivingBase ent;
-    public ArrayList<Entity> additionalEnts = new ArrayList<Entity>();
+    public ArrayList<Entity> additionalEnts = new ArrayList<>();
     public double[] pos = new double[3];
     public double[] rot = new double[2];
-    public ItemStack[] inventory = new ItemStack[5];
+    public ItemStack[] inventory = new ItemStack[6];
     public float health;
     public int hurtTime;
     public int deathTime;
@@ -60,4 +63,5 @@ public class EntityState
     public boolean sprinting = false;
     public boolean sneaking = false;
     public boolean sleeping = false;
+    public boolean elytraFlying = false;
 }

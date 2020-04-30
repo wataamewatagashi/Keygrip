@@ -3,41 +3,52 @@ package me.ichun.mods.keygrip.common.scene.action;
 import com.google.common.collect.Ordering;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import me.ichun.mods.ichunutil.common.core.util.EntityHelper;
-import me.ichun.mods.ichunutil.common.core.util.IOUtil;
-import me.ichun.mods.keygrip.common.Keygrip;
-import me.ichun.mods.keygrip.common.packet.PacketToggleSleeping;
-import me.ichun.mods.keygrip.common.scene.Scene;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.EnumPacketDirection;
+import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketEntityEquipment;
 import net.minecraft.network.play.server.SPacketEntityStatus;
 import net.minecraft.network.play.server.SPacketPlayerListItem;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+
 import org.apache.commons.lang3.RandomStringUtils;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import me.ichun.mods.ichunutil.common.core.util.EntityHelper;
+import me.ichun.mods.ichunutil.common.core.util.IOUtil;
+import me.ichun.mods.keygrip.common.Keygrip;
+import me.ichun.mods.keygrip.common.packet.PacketToggleSleeping;
+import me.ichun.mods.keygrip.common.scene.Scene;
 
 public class Action implements Comparable<Action>
 {
@@ -69,11 +80,11 @@ public class Action implements Comparable<Action>
     public int[] rotation = new int[2];
 
     @SerializedName("ac")
-    public TreeMap<Integer, ArrayList<ActionComponent>> actionComponents = new TreeMap<Integer, ArrayList<ActionComponent>>(Ordering.natural());
+    public TreeMap<Integer, ArrayList<ActionComponent>> actionComponents = new TreeMap<>(Ordering.natural());
     @SerializedName("al")
-    public TreeMap<Integer, LimbComponent> lookComponents = new TreeMap<Integer, LimbComponent>(Ordering.natural());
+    public TreeMap<Integer, LimbComponent> lookComponents = new TreeMap<>(Ordering.natural());
     @SerializedName("ap")
-    public TreeMap<Integer, LimbComponent> posComponents = new TreeMap<Integer, LimbComponent>(Ordering.natural());
+    public TreeMap<Integer, LimbComponent> posComponents = new TreeMap<>(Ordering.natural());
 
     public transient EntityState state;
 
@@ -96,7 +107,7 @@ public class Action implements Comparable<Action>
                 CompressedStreamTools.writeCompressed(tag, baos);
                 nbtToRead = baos.toByteArray();
             }
-            catch(IOException ioexception)
+            catch(IOException ignored)
             {
             }
         }
@@ -146,17 +157,18 @@ public class Action implements Comparable<Action>
                         case 1:
                         {
                             state.useItem = !state.useItem;
-                            if(state.ent instanceof EntityPlayer)
+                            if(!(state.ent instanceof EntityPlayer)) {break;}
+                            EntityPlayer player = (EntityPlayer)state.ent;
+                            if(state.useItem && !state.ent.getHeldItem(EnumHand.MAIN_HAND).isEmpty())
                             {
-                                EntityPlayer player = (EntityPlayer)state.ent;
-                                if(state.useItem && state.ent.getHeldItem() != null)
-                                {
-                                    player.setItemInUse(state.ent.getHeldItem(), state.ent.getHeldItem().getMaxItemUseDuration());
-                                }
-                                else
-                                {
-                                    player.stopUsingItem();
-                                }
+                                player.setActiveHand(EnumHand.MAIN_HAND);
+//                                itemUse(player, player.getHeldItem(EnumHand.MAIN_HAND), 5);
+                            } else if (state.useItem && !state.ent.getHeldItem(EnumHand.OFF_HAND).isEmpty()) {
+                                player.setActiveHand(EnumHand.OFF_HAND);
+//                                itemUse(player, player.getHeldItem(EnumHand.OFF_HAND), 5);
+                            }
+                            else {
+                                player.stopActiveHand();
                             }
                             break;
                         }
@@ -178,7 +190,7 @@ public class Action implements Comparable<Action>
                             RayTraceResult mop = EntityHelper.getEntityLook(state.ent, 4);
                             if(mop != null && mop.typeOfHit.equals(RayTraceResult.Type.ENTITY))
                             {
-                                EntityHelper.attackEntityWithItem(state.ent, mop.entityHit);
+                                EntityHelper.faceEntity(state.ent, mop.entityHit, 1, 1);
                             }
                             break;
                         }
@@ -188,14 +200,14 @@ public class Action implements Comparable<Action>
                             state.ent.setHealth(state.health);
                             state.ent.hurtTime = comp.itemNBT[0];
                             state.ent.deathTime = comp.itemNBT[1];
-                            if(state.ent.hurtTime > 0)
+                            if(state.ent.hurtTime <= 0) {break;}
+
+                            if(state.ent instanceof EntityPlayer)
                             {
-                                if(state.ent instanceof EntityPlayer)
-                                {
-                                    state.ent.playSound(state.ent.deathTime > 0 ? "game.player.die" : "game.player.hurt", 1.0F, (state.ent.getRNG().nextFloat() - state.ent.getRNG().nextFloat()) * 0.2F + 1.0F);
-                                }
-                                FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityStatus(state.ent, (byte)(state.ent.deathTime > 0 ? 3 : 2)), state.ent.dimension);
+                                state.ent.playSound(state.ent.deathTime > 0 ? SoundEvents.ENTITY_PLAYER_DEATH : SoundEvents.ENTITY_PLAYER_HURT, 1.0F, (state.ent.getRNG().nextFloat() - state.ent.getRNG().nextFloat()) * 0.2F + 1.0F);
                             }
+                            FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityStatus(state.ent, (byte)(state.ent.deathTime > 0 ? 3 : 2)), state.ent.dimension);
+
                             break;
                         }
                         case 6:
@@ -204,107 +216,97 @@ public class Action implements Comparable<Action>
                             if(state.fire)
                             {
                                 state.ent.setFire(24000);
-                                state.ent.getDataWatcher().updateObject(0, Byte.valueOf((byte)(state.ent.getDataWatcher().getWatchableObjectByte(0) | 1 << 0)));
                             }
                             else
                             {
                                 state.ent.extinguish();
-                                state.ent.getDataWatcher().updateObject(0, Byte.valueOf((byte)(state.ent.getDataWatcher().getWatchableObjectByte(0) & ~(1 << 0))));
                             }
                             break;
                         }
                         case 7:
                         {
                             state.sleeping = !state.sleeping;
-                            if(state.ent instanceof EntityPlayer)
-                            {
-                                EntityPlayer player = (EntityPlayer)state.ent;
-                                if(state.sleeping)
-                                {
-                                    player.setSize(0.2F, 0.2F);
+                            if(!(state.ent instanceof EntityPlayer)) {break;}
 
-                                    player.sleeping = true;
-                                    player.sleepTimer = 0;
-                                    player.bedLocation = new BlockPos(Math.floor(player.posX), Math.floor(player.posY), Math.floor(player.posZ));
-                                    player.motionX = player.motionZ = player.motionY = 0.0D;
-                                }
-                                else
-                                {
-                                    player.setSize(0.6F, 1.8F);
+                            EntityPlayer player = (EntityPlayer)state.ent;
+                            Keygrip.channel.sendToDimension(new PacketToggleSleeping(player.getEntityId(), state.sleeping, comp.itemAction), player.dimension);
+                            break;
+                        }
+                        case 8:
+                        {
+                            state.elytraFlying = !state.elytraFlying;
+                            if (!(state.ent instanceof FakePlayer)) { break;}
+                            FakePlayer player = (FakePlayer) state.ent;
 
-                                    player.sleeping = false;
-                                    player.sleepTimer = 0;
-                                }
-                                Keygrip.channel.sendToDimension(new PacketToggleSleeping(player.getEntityId(), state.sleeping, comp.itemAction), player.dimension);
+                            if (state.elytraFlying) {
+                                player.setElytraFlying();
+                            } else {
+                                player.clearElytraFlying();
                             }
+
                             break;
                         }
                         case 0:
                         {
-                            if(comp.itemAction > 0)
+                            if(comp.itemAction <= 0) {break;}
+                            if(comp.itemAction <= 6)
                             {
-                                if(comp.itemAction <= 5)
+                                if(comp.itemNBT != null)
                                 {
-                                    if(comp.itemNBT != null)
-                                    {
-                                        try
-                                        {
-                                            state.ent.setCurrentItemOrArmor(comp.itemAction - 1, ItemStack.loadItemStackFromNBT(CompressedStreamTools.readCompressed(new ByteArrayInputStream(comp.itemNBT))));
-                                        }
-                                        catch(IOException ignored)
-                                        {
-                                        }
-                                    }
-                                    else
-                                    {
-                                        state.ent.setCurrentItemOrArmor(comp.itemAction - 1, null);
-                                    }
-                                    if(state.ent instanceof EntityPlayer)
-                                    {
-                                        FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityEquipment(state.ent.getEntityId(), comp.itemAction - 1, state.ent.getEquipmentInSlot(comp.itemAction - 1)), ((EntityPlayer)state.ent).dimension);
-                                    }
-                                }
-                                else if(comp.itemAction == 6 && comp.itemNBT != null)
-                                {
-                                    ItemStack stack = null;
                                     try
                                     {
-                                        stack = ItemStack.loadItemStackFromNBT(CompressedStreamTools.readCompressed(new ByteArrayInputStream(comp.itemNBT)));
+                                        state.ent.setItemStackToSlot(convertSlotNumToEnum(comp.itemAction - 1), new ItemStack(CompressedStreamTools.readCompressed(new ByteArrayInputStream(comp.itemNBT))));
                                     }
                                     catch(IOException ignored)
                                     {
-
                                     }
-                                    if(stack != null)
-                                    {
-                                        double d0 = state.ent.posY - 0.30000001192092896D + (double)state.ent.getEyeHeight();
-                                        EntityItem entityitem = new EntityItem(state.ent.worldObj, state.ent.posX, d0, state.ent.posZ, stack);
-                                        entityitem.setPickupDelay(40);
+                                }
+                                else {
+                                    state.ent.setItemStackToSlot(convertSlotNumToEnum(comp.itemAction - 1), ItemStack.EMPTY);
+                                }
+                                if(state.ent instanceof EntityPlayer)
+                                {
+                                    FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityEquipment(state.ent.getEntityId(), convertSlotNumToEnum(comp.itemAction - 1), state.ent.getItemStackFromSlot(convertSlotNumToEnum(comp.itemAction - 1))), ((EntityPlayer)state.ent).dimension);
+                                }
+                            }
+                            if(comp.itemAction == 7 && comp.itemNBT != null)
+                            {
+                                ItemStack stack = null;
+                                try
+                                {
+                                    stack = new ItemStack(CompressedStreamTools.readCompressed(new ByteArrayInputStream(comp.itemNBT)));
+                                }
+                                catch(IOException ignored)
+                                {
+                                }
+                                if(stack != null)
+                                {
+                                    double d0 = state.ent.posY - 0.30000001192092896D + (double)state.ent.getEyeHeight();
+                                    EntityItem entityitem = new EntityItem(state.ent.world, state.ent.posX, d0, state.ent.posZ, stack);
+                                    entityitem.setPickupDelay(40);
+                                    entityitem.setThrower(state.ent.getName());
 
-                                        entityitem.setThrower(state.ent.getName());
+                                    float f;
+                                    float f1;
 
-                                        float f;
-                                        float f1;
+                                    f = 0.3F;
+                                    entityitem.motionX = -MathHelper.sin(state.ent.rotationYaw / 180.0F * (float)Math.PI) * MathHelper.cos(state.ent.rotationPitch / 180.0F * (float)Math.PI) * f;
+                                    entityitem.motionZ = MathHelper.cos(state.ent.rotationYaw / 180.0F * (float)Math.PI) * MathHelper.cos(state.ent.rotationPitch / 180.0F * (float)Math.PI) * f;
+                                    entityitem.motionY = -MathHelper.sin(state.ent.rotationPitch / 180.0F * (float)Math.PI) * f + 0.1F;
+                                    f1 = state.ent.getRNG().nextFloat() * (float)Math.PI * 2.0F;
+                                    f = 0.02F * state.ent.getRNG().nextFloat();
+                                    entityitem.motionX += Math.cos(f1) * (double)f;
+                                    entityitem.motionY += (state.ent.getRNG().nextFloat() - state.ent.getRNG().nextFloat()) * 0.1F;
+                                    entityitem.motionZ += Math.sin(f1) * (double)f;
 
-                                        f = 0.3F;
-                                        entityitem.motionX = (double)(-MathHelper.sin(state.ent.rotationYaw / 180.0F * (float)Math.PI) * MathHelper.cos(state.ent.rotationPitch / 180.0F * (float)Math.PI) * f);
-                                        entityitem.motionZ = (double)(MathHelper.cos(state.ent.rotationYaw / 180.0F * (float)Math.PI) * MathHelper.cos(state.ent.rotationPitch / 180.0F * (float)Math.PI) * f);
-                                        entityitem.motionY = (double)(-MathHelper.sin(state.ent.rotationPitch / 180.0F * (float)Math.PI) * f + 0.1F);
-                                        f1 = state.ent.getRNG().nextFloat() * (float)Math.PI * 2.0F;
-                                        f = 0.02F * state.ent.getRNG().nextFloat();
-                                        entityitem.motionX += Math.cos((double)f1) * (double)f;
-                                        entityitem.motionY += (double)((state.ent.getRNG().nextFloat() - state.ent.getRNG().nextFloat()) * 0.1F);
-                                        entityitem.motionZ += Math.sin((double)f1) * (double)f;
-
-                                        state.ent.worldObj.spawnEntityInWorld(entityitem);
-
-                                        state.additionalEnts.add(entityitem);
-                                    }
+                                    state.ent.world.spawnEntity(entityitem);
+                                    state.additionalEnts.add(entityitem);
                                 }
                             }
                             break;
                         }
                     }
+                    state.ent.onEntityUpdate();
                 }
             }
             LimbComponent comp = lookComponents.get(time);
@@ -331,7 +333,7 @@ public class Action implements Comparable<Action>
                 EntityPlayer player = (EntityPlayer)state.ent;
                 if(player.getHealth() > 0.0F && !player.isSpectator())
                 {
-                    AxisAlignedBB axisalignedbb = null;
+                    AxisAlignedBB axisalignedbb;
 
                     if(player.getRidingEntity() != null && !player.getRidingEntity().isDead)
                     {
@@ -342,14 +344,12 @@ public class Action implements Comparable<Action>
                         axisalignedbb = player.getEntityBoundingBox().expand(1.0D, 0.5D, 1.0D);
                     }
 
-                    List list = player.worldObj.getEntitiesWithinAABBExcludingEntity(player, axisalignedbb);
+                    List list = player.world.getEntitiesWithinAABBExcludingEntity(player, axisalignedbb);
 
-                    for(int i = 0; i < list.size(); ++i)
-                    {
-                        Entity entity = (Entity)list.get(i);
+                    for (Object o : list) {
+                        Entity entity = (Entity) o;
 
-                        if(!entity.isDead)
-                        {
+                        if (!entity.isDead) {
                             entity.onCollideWithPlayer(player);
                         }
                     }
@@ -357,35 +357,9 @@ public class Action implements Comparable<Action>
 
                 if(state.useItem)
                 {
-                    if(player.getActiveItemStack() != null)
-                    {
-                        ItemStack itemstack = player.inventory.getCurrentItem();
-
-                        if(itemstack == player.getActiveItemStack())
-                        {
-                            player.itemInUseCount = net.minecraftforge.event.ForgeEventFactory.onItemUseTick(player, player.getActiveItemStack(), player.getItemInUseCount());
-                            if(player.getItemInUseCount() <= 0)
-                            {
-                                player.onItemUseFinish();
-                            }
-                            else
-                            {
-                                player.getActiveItemStack().getItem().onUsingTick(player.getActiveItemStack(), player, player.getItemInUseCount()); //Forge Added
-                                if(player.getItemInUseCount() <= 25 && player.getItemInUseCount() % 4 == 0)
-                                {
-                                    player.updateItemUse(itemstack, 5);
-                                }
-
-                                if(--player.getItemInUseCount() == 0 && !player.worldObj.isRemote)
-                                {
-                                    player.onItemUseFinish();
-                                }
-                            }
-                        }
-                        else
-                        {
-                            player.clearItemInUse();
-                        }
+                    player.onUpdate();
+                    if (player.isHandActive()) {
+                        playUseSound(player);
                     }
                 }
             }
@@ -409,18 +383,17 @@ public class Action implements Comparable<Action>
                 {
                     this.state.ent = new FakePlayer(world, EntityHelper.getGameProfile(this.entityType.substring("player::".length())));
                     this.state.ent.readFromNBT(tag);
-                    new FakeNetHandlerPlayServer(FMLCommonHandler.instance().getMinecraftServerInstance(), new NetworkManager(EnumPacketDirection.CLIENTBOUND), (FakePlayer)this.state.ent);
+                    new NetHandlerPlayServer(FMLCommonHandler.instance().getMinecraftServerInstance(), new NetworkManager(EnumPacketDirection.CLIENTBOUND), (FakePlayer)this.state.ent);
                     FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayers(new SPacketPlayerListItem(SPacketPlayerListItem.Action.ADD_PLAYER, (FakePlayer)this.state.ent));
-                    state.ent.getDataWatcher().updateObject(10, (byte)127);
+                    state.ent.onEntityUpdate();
                 }
                 else
                 {
                     this.state.ent = (EntityLivingBase)Class.forName(this.entityType).getConstructor(World.class).newInstance(world);
                     this.state.ent.setSprinting(playerDummy.isSprinting());
                     this.state.ent.setSneaking(playerDummy.isSneaking());
-                    for(int i = 0; i < state.ent.getInventory().length; i++)
-                    {
-                        this.state.ent.setCurrentItemOrArmor(i, playerDummy.getEquipmentInSlot(i));
+                    for (EntityEquipmentSlot e : EntityEquipmentSlot.values()) {
+                        this.state.ent.setItemStackToSlot(e, state.ent.getItemStackFromSlot(e));
                     }
                 }
 
@@ -449,13 +422,11 @@ public class Action implements Comparable<Action>
             stream.read(data);
             stream.close();
 
-            Action scene = (new Gson()).fromJson(IOUtil.decompress(data), Action.class);
-
-            return scene;
+            return (new Gson()).fromJson(IOUtil.decompress(data), Action.class);
         }
-        catch(IOException ignored)
+        catch(IOException e)
         {
-            ignored.printStackTrace();
+            e.printStackTrace();
         }
         return null;
     }
@@ -464,5 +435,41 @@ public class Action implements Comparable<Action>
     public int compareTo(Action comp)
     {
         return Integer.compare(startKey, comp.startKey);
+    }
+
+    /**
+     * FIXME: This method still could not work.
+     * Play sound when player is using item.
+     * If player is not using item, this method does nothing.
+     * I created this method because of when fake player is using item, sound does not played.(I could not understand why)
+     * @param player    Player which is using item
+     */
+    private static void playUseSound(EntityPlayer player) {
+        if (player.isHandActive()) {return;}
+        ItemStack itemStack = player.getActiveItemStack();
+        if (itemStack.isEmpty()) { return;}
+        if (itemStack.getItemUseAction() == EnumAction.DRINK) {
+            player.world.playSound(player.posX, player.posY, player.posZ, SoundEvents.ENTITY_GENERIC_DRINK, SoundCategory.PLAYERS, 0.5F, player.world.rand.nextFloat() * 0.1F + 0.9F, false);
+        }
+        if (itemStack.getItemUseAction() == EnumAction.EAT) {
+            player.world.playSound(player.posX, player.posY, player.posZ, SoundEvents.ENTITY_GENERIC_EAT, SoundCategory.PLAYERS, 0.5F + 0.5F * (float)player.world.rand.nextInt(2), (player.world.rand.nextFloat() - player.world.rand.nextFloat()) * 0.2F + 1.0F, false);
+        }
+    }
+
+    /**
+     * convert slot number to EntityEquipmentSlot class
+     * @param slot slot number (0 = mainHand, 1 = boots, 2 = legs, 3 = chest, 4 = head, 5 = offHand)
+     * @return EntityEquipmentSlot class
+     */
+    private static EntityEquipmentSlot convertSlotNumToEnum(int slot) {
+        switch (slot) {
+            case 0: return EntityEquipmentSlot.MAINHAND;
+            case 1: return EntityEquipmentSlot.FEET;
+            case 2: return EntityEquipmentSlot.LEGS;
+            case 3: return EntityEquipmentSlot.CHEST;
+            case 4: return EntityEquipmentSlot.HEAD;
+            case 5: return EntityEquipmentSlot.OFFHAND;
+            default: return null;
+        }
     }
 }

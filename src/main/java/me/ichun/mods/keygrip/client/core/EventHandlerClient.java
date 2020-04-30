@@ -188,12 +188,11 @@ public class EventHandlerClient
             if(actionToRecord != null && !mc.isGamePaused() && startRecord && (Keygrip.config.playbackSceneWhileRecording != 1 || sceneFrom.playTime >= actionToRecord.startKey + startRecordTime))
             {
                 ArrayList<ActionComponent> actions = new ArrayList<>();
-
                 if(!nextState.dropping && Keyboard.isKeyDown(mc.gameSettings.keyBindDrop.getKeyCode()))
                 {
                     //trying to drop
                     ItemStack is = mc.player.getHeldItemMainhand();
-                    if(is.isEmpty())
+                    if(!is.isEmpty())
                     {
                         byte[] tag = null;
                         NBTTagCompound nbt = new NBTTagCompound();
@@ -214,7 +213,7 @@ public class EventHandlerClient
                         }
                         if(tag != null)
                         {
-                            actions.add(new ActionComponent(0, 6, tag));
+                            actions.add(new ActionComponent(0, 7, tag));
                         }
                     }
                 }
@@ -268,7 +267,7 @@ public class EventHandlerClient
                             {
                             }
                         }
-                        actions.add(new ActionComponent(0, i + 1, nextState.inventory[i] == null ? null : tag));
+                        actions.add(new ActionComponent(0, i + 1, tag));
                     }
                 }
                 if(nextState.swinging != prevState.swinging)
@@ -299,6 +298,10 @@ public class EventHandlerClient
                 {
                     BlockPos pos = new BlockPos(Math.floor(mc.player.posX), Math.floor(mc.player.posY), Math.floor(mc.player.posZ));
                     actions.add(new ActionComponent(7, nextState.sleeping && mc.world.getBlockState(pos).getBlock() instanceof BlockBed ? mc.world.getBlockState(pos).getBlock().getBedDirection(mc.world.getBlockState(pos), mc.world, pos).ordinal() : 0, null));
+                }
+                if (nextState.elytraFlying != prevState.elytraFlying)
+                {
+                    actions.add(new ActionComponent(8, 0, null));
                 }
 
                 if(!(nextState.rot[0] == prevState.rot[0] && nextState.rot[1] == prevState.rot[1]))
