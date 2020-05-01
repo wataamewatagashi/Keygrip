@@ -23,7 +23,6 @@ import net.minecraft.network.play.server.SPacketEntityEquipment;
 import net.minecraft.network.play.server.SPacketEntityStatus;
 import net.minecraft.network.play.server.SPacketPlayerListItem;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
@@ -87,6 +86,8 @@ public class Action implements Comparable<Action>
     public TreeMap<Integer, LimbComponent> posComponents = new TreeMap<>(Ordering.natural());
 
     public transient EntityState state;
+
+    private int redundantSoundChecker = 0;
 
     public Action(String name, String type, int startKey, NBTTagCompound tag, boolean preCreate, boolean persist) // name of action, entity type (player::<NAME> or entity class name), start key for action, NBT Tag if player, pre-create the player.
     {
@@ -159,16 +160,12 @@ public class Action implements Comparable<Action>
                             state.useItem = !state.useItem;
                             if(!(state.ent instanceof EntityPlayer)) {break;}
                             EntityPlayer player = (EntityPlayer)state.ent;
+                            player.stopActiveHand();
                             if(state.useItem && !state.ent.getHeldItem(EnumHand.MAIN_HAND).isEmpty())
                             {
                                 player.setActiveHand(EnumHand.MAIN_HAND);
-//                                itemUse(player, player.getHeldItem(EnumHand.MAIN_HAND), 5);
                             } else if (state.useItem && !state.ent.getHeldItem(EnumHand.OFF_HAND).isEmpty()) {
                                 player.setActiveHand(EnumHand.OFF_HAND);
-//                                itemUse(player, player.getHeldItem(EnumHand.OFF_HAND), 5);
-                            }
-                            else {
-                                player.stopActiveHand();
                             }
                             break;
                         }
@@ -358,8 +355,11 @@ public class Action implements Comparable<Action>
                 if(state.useItem)
                 {
                     player.onUpdate();
-                    if (player.isHandActive()) {
+                    if (redundantSoundChecker == 3) {
                         playUseSound(player);
+                        redundantSoundChecker = 0;
+                    } else {
+                        redundantSoundChecker++;
                     }
                 }
             }
@@ -438,21 +438,21 @@ public class Action implements Comparable<Action>
     }
 
     /**
-     * FIXME: This method still could not work.
      * Play sound when player is using item.
      * If player is not using item, this method does nothing.
      * I created this method because of when fake player is using item, sound does not played.(I could not understand why)
      * @param player    Player which is using item
      */
     private static void playUseSound(EntityPlayer player) {
-        if (player.isHandActive()) {return;}
+        if (!player.isHandActive()) {return;}
         ItemStack itemStack = player.getActiveItemStack();
         if (itemStack.isEmpty()) { return;}
+        if (player.getItemInUseCount() % 4 != 0) {return;}
         if (itemStack.getItemUseAction() == EnumAction.DRINK) {
-            player.world.playSound(player.posX, player.posY, player.posZ, SoundEvents.ENTITY_GENERIC_DRINK, SoundCategory.PLAYERS, 0.5F, player.world.rand.nextFloat() * 0.1F + 0.9F, false);
+            player.playSound(SoundEvents.ENTITY_GENERIC_DRINK, 0.5F, player.world.rand.nextFloat() * 0.1F + 0.9F);
         }
         if (itemStack.getItemUseAction() == EnumAction.EAT) {
-            player.world.playSound(player.posX, player.posY, player.posZ, SoundEvents.ENTITY_GENERIC_EAT, SoundCategory.PLAYERS, 0.5F + 0.5F * (float)player.world.rand.nextInt(2), (player.world.rand.nextFloat() - player.world.rand.nextFloat()) * 0.2F + 1.0F, false);
+            player.playSound(SoundEvents.ENTITY_GENERIC_EAT, 0.5F + 0.5F * (float)player.world.rand.nextInt(2), (player.world.rand.nextFloat() - player.world.rand.nextFloat()) * 0.2F + 1.0F);
         }
     }
 
