@@ -17,7 +17,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.EnumPacketDirection;
-import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketEntityEquipment;
 import net.minecraft.network.play.server.SPacketEntityStatus;
@@ -46,6 +45,7 @@ import java.util.TreeMap;
 import me.ichun.mods.ichunutil.common.core.util.EntityHelper;
 import me.ichun.mods.ichunutil.common.core.util.IOUtil;
 import me.ichun.mods.keygrip.common.Keygrip;
+import me.ichun.mods.keygrip.common.core.FakeNetHandlerPlayServer;
 import me.ichun.mods.keygrip.common.packet.PacketToggleSleeping;
 import me.ichun.mods.keygrip.common.scene.Scene;
 
@@ -250,20 +250,28 @@ public class Action implements Comparable<Action>
                             {
                                 if(comp.itemNBT != null)
                                 {
+                                    ItemStack itemStack = ItemStack.EMPTY;
+                                    ItemStack currentItem = state.ent.getItemStackFromSlot(convertSlotNumToEnum(comp.itemAction));
                                     try
                                     {
-                                        state.ent.setItemStackToSlot(convertSlotNumToEnum(comp.itemAction - 1), new ItemStack(CompressedStreamTools.readCompressed(new ByteArrayInputStream(comp.itemNBT))));
+                                        itemStack = new ItemStack(CompressedStreamTools.readCompressed(new ByteArrayInputStream(comp.itemNBT)));
                                     }
                                     catch(IOException ignored)
                                     {
                                     }
+                                    if  (currentItem.isEmpty()
+                                            || comp.itemAction < 0 || comp.itemAction > 5
+                                            || !currentItem.getDisplayName().equals(itemStack.getDisplayName()) )
+                                    {
+                                        state.ent.setItemStackToSlot(convertSlotNumToEnum(comp.itemAction), itemStack);
+                                    }
                                 }
                                 else {
-                                    state.ent.setItemStackToSlot(convertSlotNumToEnum(comp.itemAction - 1), ItemStack.EMPTY);
+                                    state.ent.setItemStackToSlot(convertSlotNumToEnum(comp.itemAction), ItemStack.EMPTY);
                                 }
                                 if(state.ent instanceof EntityPlayer)
                                 {
-                                    FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityEquipment(state.ent.getEntityId(), convertSlotNumToEnum(comp.itemAction - 1), state.ent.getItemStackFromSlot(convertSlotNumToEnum(comp.itemAction - 1))), ((EntityPlayer)state.ent).dimension);
+                                    FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityEquipment(state.ent.getEntityId(), convertSlotNumToEnum(comp.itemAction), state.ent.getItemStackFromSlot(convertSlotNumToEnum(comp.itemAction))), ((EntityPlayer)state.ent).dimension);
                                 }
                             }
                             if(comp.itemAction == 7 && comp.itemNBT != null)
@@ -354,8 +362,8 @@ public class Action implements Comparable<Action>
 
                 if(state.useItem)
                 {
-                    player.onUpdate();
                     if (redundantSoundChecker == 3) {
+                        player.onUpdate();
                         playUseSound(player);
                         redundantSoundChecker = 0;
                     } else {
@@ -383,7 +391,7 @@ public class Action implements Comparable<Action>
                 {
                     this.state.ent = new FakePlayer(world, EntityHelper.getGameProfile(this.entityType.substring("player::".length())));
                     this.state.ent.readFromNBT(tag);
-                    new NetHandlerPlayServer(FMLCommonHandler.instance().getMinecraftServerInstance(), new NetworkManager(EnumPacketDirection.CLIENTBOUND), (FakePlayer)this.state.ent);
+                    new FakeNetHandlerPlayServer(FMLCommonHandler.instance().getMinecraftServerInstance(), new NetworkManager(EnumPacketDirection.CLIENTBOUND), (FakePlayer)this.state.ent);
                     FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayers(new SPacketPlayerListItem(SPacketPlayerListItem.Action.ADD_PLAYER, (FakePlayer)this.state.ent));
                     state.ent.onEntityUpdate();
                 }
@@ -463,12 +471,12 @@ public class Action implements Comparable<Action>
      */
     private static EntityEquipmentSlot convertSlotNumToEnum(int slot) {
         switch (slot) {
-            case 0: return EntityEquipmentSlot.MAINHAND;
-            case 1: return EntityEquipmentSlot.FEET;
-            case 2: return EntityEquipmentSlot.LEGS;
-            case 3: return EntityEquipmentSlot.CHEST;
-            case 4: return EntityEquipmentSlot.HEAD;
-            case 5: return EntityEquipmentSlot.OFFHAND;
+            case 1: return EntityEquipmentSlot.MAINHAND;
+            case 2: return EntityEquipmentSlot.FEET;
+            case 3: return EntityEquipmentSlot.LEGS;
+            case 4: return EntityEquipmentSlot.CHEST;
+            case 5: return EntityEquipmentSlot.HEAD;
+            case 6: return EntityEquipmentSlot.OFFHAND;
             default: return null;
         }
     }
