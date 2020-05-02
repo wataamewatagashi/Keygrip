@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.UUID;
 
 import me.ichun.mods.ichunutil.client.gui.window.WindowPopup;
 import me.ichun.mods.ichunutil.common.core.util.IOUtil;
@@ -65,142 +66,115 @@ public class Scene
 
     public void update()
     {
-        if(playing)
-        {
-            if(server != null)
-            {
-                for(Action a : actions)
-                {
-                    if(a.getLength() > 0)
-                    {
-                        if(playTime > a.startKey + a.getLength() || playTime < a.startKey || a.hidden == 1)
-                        {
-                            if(playTime == 5 && a.precreateEntity == 1 && a.state != null && a.state.ent != null)
-                            {
-                                FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityTeleport(a.state.ent), a.state.ent.world.provider.getDimension());
-                            }
-                            continue;
-                        }
-                        if(playTime == a.startKey)
-                        {
-                            if(a.precreateEntity != 1)
-                            {
-                                if(a.createState(server, (startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION))
-                                {
-                                    if(a.state.ent == null)
-                                    {
-                                        Keygrip.LOGGER.warn("Error initializing action: " + a.name);
-                                    }
-                                    else
-                                    {
-                                        a.state.ent.setLocationAndAngles((startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION, a.rotation[0] / (float)PRECISION, a.rotation[1] / (float)PRECISION);
-                                        server.spawnEntity(a.state.ent);
-                                        if(a.state.ent instanceof EntityPlayer)
-                                        {
-                                            server.playerEntities.remove(a.state.ent);
-                                            server.updateAllPlayersSleepingFlag();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        else if(playTime == a.startKey + a.getLength() && a.persistEntity != 1 && a.state != null && a.state.ent != null)
-                        {
-                            a.state.ent.setDead();
-                            for(Entity ent : a.state.additionalEnts)
-                            {
-                                ent.setDead();
-                            }
-                            a.state = null;
-                        }
-                        a.doAction(this, playTime);
-                        if(playTime - a.startKey == 5 && a.state != null && a.state.ent != null && a.precreateEntity != 1)
-                        {
+        if(!playing) return;
+        if(server == null) {
+            playTime++;
+            return;
+        }
+        actions.stream()
+                .filter(action -> action.getLength() > 0)
+                .forEach(a -> {
+                    if(playTime > a.startKey + a.getLength() || playTime < a.startKey || a.hidden == 1) {
+                        if(playTime == 5 && a.precreateEntity == 1 && a.state != null && a.state.ent != null) {
                             FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityTeleport(a.state.ent), a.state.ent.world.provider.getDimension());
                         }
+                        return;
                     }
-                }
-            }
+                    if(playTime == a.startKey && a.precreateEntity != 1 && a.createState(server, (startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION)) {
+                        if(a.state.ent == null) {
+                            Keygrip.LOGGER.warn("Error initializing action: " + a.name);
+                        }
+                        else {
+                            a.state.ent.setLocationAndAngles((startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION, a.rotation[0] / (float)PRECISION, a.rotation[1] / (float)PRECISION);
+                            a.state.ent.setUniqueId(UUID.randomUUID());
+                            server.spawnEntity(a.state.ent);
+                            if(a.state.ent instanceof EntityPlayer) {
+                                server.playerEntities.remove(a.state.ent);
+                                server.updateAllPlayersSleepingFlag();
+                            }
+                        }
+                    }
+                    else if(playTime == a.startKey + a.getLength() && a.persistEntity != 1 && a.state != null && a.state.ent != null)
+                    {
+                        a.state.ent.setDead();
+                        for(Entity ent : a.state.additionalEnts)
+                        {
+                            ent.setDead();
+                        }
+                        a.state = null;
+                    }
+                    a.doAction(this, playTime);
+                    if(playTime - a.startKey == 5 && a.state != null && a.state.ent != null && a.precreateEntity != 1)
+                    {
+                        FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityTeleport(a.state.ent), a.state.ent.world.provider.getDimension());
+                    }
+                });
             playTime++;
-        }
     }
 
     public int getLength()
     {
-        int l = 0;
-        for(Action a : actions)
-        {
-            if(a.startKey + a.getLength() > l)
-            {
-                l = a.startKey + a.getLength();
-            }
-        }
-        return l;
+//        final int[] l = {0};
+//        actions.parallelStream().filter(action -> action.startKey + action.getLength() > l[0])
+//                .forEach(action -> l[0] = action.startKey + action.getLength());
+//        return l[0];
+        return actions.parallelStream().mapToInt(Action::getLength).max().orElse(0);
     }
 
     public void create(WorldServer world)
     {
         server = world;
-        for(Action a : actions)
-        {
-            if(playTime > a.startKey + a.getLength() && a.persistEntity != 1 || a.hidden == 1)
-            {
-                continue;
+        actions.forEach(a -> {
+            if(playTime > a.startKey + a.getLength() && a.persistEntity != 1 || a.hidden == 1) {
+                return;
             }
-            if(playTime >= a.startKey || a.precreateEntity == 1)
-            {
-                //create the related entity
-                if(a.createState(world, (startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION))
+            if(playTime < a.startKey && a.precreateEntity != 1) return;
+            //create the related entity
+            if(!a.createState(world, (startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION)) {
+                return;
+            }
+
+            if(a.state.ent == null) {
+                Keygrip.LOGGER.warn("Error initializing action: " + a.name);
+                return;
+            }
+
+            a.state.ent.setUniqueId(UUID.randomUUID());
+
+            a.state.ent.setLocationAndAngles((startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION, a.rotation[0] / (float)PRECISION, a.rotation[1] / (float)PRECISION);
+            world.spawnEntity(a.state.ent);
+            if(a.state.ent instanceof EntityPlayer)
                 {
-                    if(a.state.ent == null)
-                    {
-                        Keygrip.LOGGER.warn("Error initializing action: " + a.name);
-                    }
-                    else
-                    {
-                        a.state.ent.setLocationAndAngles((startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION, a.rotation[0] / (float)PRECISION, a.rotation[1] / (float)PRECISION);
-
-                        world.spawnEntity(a.state.ent);
-                        if(a.state.ent instanceof EntityPlayer)
-                        {
-                            world.playerEntities.remove(a.state.ent);
-                            world.updateAllPlayersSleepingFlag();
-                        }
-
-                        LimbComponent lastLook = null;
-                        LimbComponent lastPos = null;
-
-                        int lastLookInt = -1;
-                        for(Map.Entry<Integer, LimbComponent> e : a.lookComponents.entrySet())
-                        {
-                            if(e.getKey() > lastLookInt && e.getKey() < playTime)
-                            {
-                                lastLookInt = e.getKey();
-                                lastLook = e.getValue();
-                            }
-                        }
-                        int lastPosInt = -1;
-                        for(Map.Entry<Integer, LimbComponent> e : a.posComponents.entrySet())
-                        {
-                            if(e.getKey() > lastPosInt && e.getKey() < playTime)
-                            {
-                                lastPosInt = e.getKey();
-                                lastPos = e.getValue();
-                            }
-                        }
-                        if(lastLook != null)
-                        {
-                            a.state.ent.rotationYawHead = a.state.ent.rotationYaw = (float) lastLook.actionChange[0] / Scene.PRECISION;
-                            a.state.ent.rotationPitch = (float) lastLook.actionChange[1] / Scene.PRECISION;
-                        }
-                        if(lastPos != null)
-                        {
-                            a.state.ent.setLocationAndAngles((lastPos.actionChange[0] + (a.offsetPos[0] + startPos[0])) / (double)PRECISION, (lastPos.actionChange[1] + (a.offsetPos[1] + startPos[1])) / (double)PRECISION, (lastPos.actionChange[2] + (a.offsetPos[2] + startPos[2])) / (double)PRECISION, a.state.ent.rotationYaw, a.state.ent.rotationPitch);
-                        }
-                    }
+                    world.playerEntities.remove(a.state.ent);
+                    world.updateAllPlayersSleepingFlag();
                 }
+            LimbComponent lastLook = null;
+            LimbComponent lastPos = null;
+            int lastLookInt = -1;
+            for(Map.Entry<Integer, LimbComponent> e : a.lookComponents.entrySet()) {
+                if(e.getKey() < lastLookInt || e.getKey() > playTime) continue;
+
+                lastLookInt = e.getKey();
+                lastLook = e.getValue();
             }
-        }
+            int lastPosInt = -1;
+            for(Map.Entry<Integer, LimbComponent> e : a.posComponents.entrySet())
+            {
+                if(e.getKey() < lastPosInt || e.getKey() > playTime) continue;
+
+                lastPosInt = e.getKey();
+                lastPos = e.getValue();
+            }
+            if(lastLook != null)
+            {
+                a.state.ent.rotationYawHead = a.state.ent.rotationYaw = (float) lastLook.actionChange[0] / Scene.PRECISION;
+                a.state.ent.rotationPitch = (float) lastLook.actionChange[1] / Scene.PRECISION;
+            }
+            if(lastPos != null)
+            {
+                a.state.ent.setLocationAndAngles((lastPos.actionChange[0] + (a.offsetPos[0] + startPos[0])) / (double)PRECISION, (lastPos.actionChange[1] + (a.offsetPos[1] + startPos[1])) / (double)PRECISION, (lastPos.actionChange[2] + (a.offsetPos[2] + startPos[2])) / (double)PRECISION, a.state.ent.rotationYaw, a.state.ent.rotationPitch);
+            }
+        });
     }
 
     public void play()
@@ -210,33 +184,22 @@ public class Scene
 
     public void stop()
     {
-        for(Action a : actions)
-        {
-            if(a.state != null && a.state.ent != null)
-            {
-                a.state.ent.setDead();
-                for(Entity ent : a.state.additionalEnts)
-                {
-                    ent.setDead();
-                }
-            }
-        }
+        actions.parallelStream()
+                .filter(action -> action.state != null && action.state.ent != null)
+                .forEach(action -> {
+                    action.state.ent.setDead();
+                    action.state.additionalEnts.forEach(Entity::setDead);
+                });
         playing = false;
     }
 
     public void destroy()
     {
-        for(Action a : actions)
-        {
-            if(a.state != null && a.state.ent != null)
-            {
-                a.state.ent.setDead();
-                for(Entity ent : a.state.additionalEnts)
-                {
-                    ent.setDead();
-                }
-            }
-        }
+        actions.parallelStream().filter(action -> action.state != null && action.state.ent != null)
+                .forEach(action -> {
+                    action.state.ent.setDead();
+                    action.state.additionalEnts.forEach(Entity::setDead);
+                });
     }
 
     public void repair()
@@ -376,14 +339,10 @@ public class Scene
                     offset += index;
                 }
             }
-            catch(IOException ignored)
-            {
-            }
-
+            catch(IOException ignored) {}
             temp.delete();
         }
-        else if(Minecraft.getMinecraft().currentScreen instanceof GuiWorkspace)
-        {
+        else if(Minecraft.getMinecraft().currentScreen instanceof GuiWorkspace) {
             //open popup
             GuiWorkspace workspace = (GuiWorkspace)Minecraft.getMinecraft().currentScreen;
             workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.playScene.failed").putInMiddleOfScreen());
