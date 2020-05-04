@@ -57,15 +57,13 @@ public class PacketSceneStatus extends AbstractPacket
     public void handleClient()
     {
         GuiWorkspace workspace = Keygrip.eventHandlerClient.workspace;
-        if(workspace.hasOpenScene() && workspace.getOpenScene().identifier.equals(sceneName))
+        if(!workspace.hasOpenScene() || !workspace.getOpenScene().identifier.equals(sceneName)) return;
+        workspace.getOpenScene().playing = playing;
+        workspace.timeline.timeline.setCurrentPos(startPoint);
+        workspace.timeline.timeline.focusOnTicker();
+        if(playing && Keygrip.eventHandlerClient.sceneFrom != null && sceneName.equals(Keygrip.eventHandlerClient.sceneFrom.identifier) && Keygrip.config.playbackSceneWhileRecording == 1 && Keygrip.eventHandlerClient.actionToRecord != null)
         {
-            workspace.getOpenScene().playing = playing;
-            workspace.timeline.timeline.setCurrentPos(startPoint);
-            workspace.timeline.timeline.focusOnTicker();
-            if(playing && Keygrip.eventHandlerClient.sceneFrom != null && sceneName.equals(Keygrip.eventHandlerClient.sceneFrom.identifier) && Keygrip.config.playbackSceneWhileRecording == 1 && Keygrip.eventHandlerClient.actionToRecord != null)
-            {
-                Keygrip.eventHandlerClient.startRecord = true;
-            }
+            Keygrip.eventHandlerClient.startRecord = true;
         }
     }
 }

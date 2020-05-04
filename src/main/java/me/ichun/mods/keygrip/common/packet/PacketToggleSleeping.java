@@ -63,47 +63,45 @@ public class PacketToggleSleeping extends AbstractPacket
     public void handleClient()
     {
         Entity ent = Minecraft.getMinecraft().world.getEntityByID(id);
-        if(ent instanceof EntityPlayer)
+        if(!(ent instanceof EntityPlayer)) return;
+
+        EntityPlayer player = (EntityPlayer)ent;
+        try {
+            sleeping.set(player, true);
+        } catch (IllegalAccessException ignored) {}
+
+        player.renderOffsetX = 0.0F;
+        player.renderOffsetZ = 0.0F;
+
+        if(state)
         {
-            EntityPlayer player = (EntityPlayer)ent;
+            if(face == EnumFacing.SOUTH.ordinal())
+            {
+                player.renderOffsetZ = -1.8F;
+            }
+            else if(face == EnumFacing.NORTH.ordinal())
+            {
+                player.renderOffsetZ = 1.8F;
+            }
+            else if(face == EnumFacing.WEST.ordinal())
+            {
+                player.renderOffsetX = 1.8F;
+            }
+            else if(face == EnumFacing.EAST.ordinal())
+            {
+                player.renderOffsetX = -1.8F;
+            }
+            if(!Keygrip.eventHandlerClient.sleepers.contains(player))
+            {
+                Keygrip.eventHandlerClient.sleepers.add(player);
+            }
+        }
+        else {
             try {
-                sleeping.set(player, true);
+                sleeping.set(player, false);
             } catch (IllegalAccessException ignored) {}
-
-            player.renderOffsetX = 0.0F;
-            player.renderOffsetZ = 0.0F;
-
-            if(state)
-            {
-                if(face == EnumFacing.SOUTH.ordinal())
-                {
-                    player.renderOffsetZ = -1.8F;
-                }
-                else if(face == EnumFacing.NORTH.ordinal())
-                {
-                    player.renderOffsetZ = 1.8F;
-                }
-                else if(face == EnumFacing.WEST.ordinal())
-                {
-                    player.renderOffsetX = 1.8F;
-                }
-                else if(face == EnumFacing.EAST.ordinal())
-                {
-                    player.renderOffsetX = -1.8F;
-                }
-                if(!Keygrip.eventHandlerClient.sleepers.contains(player))
-                {
-                    Keygrip.eventHandlerClient.sleepers.add(player);
-                }
-            }
-            else
-            {
-                try {
-                    sleeping.set(player, false);
-                } catch (IllegalAccessException ignored) {}
-                player.bedLocation = null;
-                Keygrip.eventHandlerClient.sleepers.remove(player);
-            }
+            player.bedLocation = null;
+            Keygrip.eventHandlerClient.sleepers.remove(player);
         }
     }
 }

@@ -20,6 +20,8 @@ import org.lwjgl.input.Keyboard;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import me.ichun.mods.ichunutil.client.keybind.KeyEvent;
 import me.ichun.mods.ichunutil.client.render.RendererHelper;
@@ -56,67 +58,57 @@ public class EventHandlerClient
     public void onKeyEvent(KeyEvent event)
     {
         Minecraft mc = Minecraft.getMinecraft();
-        if(event.keyBind.isPressed())
+        if(!event.keyBind.isPressed() || mc.world == null) return;
+        if(mc.currentScreen != null && !(mc.currentScreen instanceof GuiChat) && !(mc.currentScreen instanceof GuiWorkspace)) return;
+
+        if(event.keyBind.equals(Keygrip.config.toggleSceneRecorder))
         {
-            if(mc.world != null)
+            if(mc.currentScreen instanceof GuiWorkspace)
             {
-                if((mc.currentScreen == null || mc.currentScreen instanceof GuiChat || mc.currentScreen instanceof GuiWorkspace))
+                mc.displayGuiScreen(null);
+                mc.setIngameFocus();
+            }
+            else {
+                if(Keygrip.eventHandlerClient.workspace == null)
                 {
-                    if(event.keyBind.equals(Keygrip.config.toggleSceneRecorder))
-                    {
-                        if(mc.currentScreen instanceof GuiWorkspace)
-                        {
-                            mc.displayGuiScreen(null);
-                            mc.setIngameFocus();
-                        }
-                        else
-                        {
-                            if(Keygrip.eventHandlerClient.workspace == null)
-                            {
-                                Keygrip.eventHandlerClient.workspace = new GuiWorkspace(1);
-                            }
-                            int oriScale = mc.gameSettings.guiScale;
-                            mc.gameSettings.guiScale = mc.gameSettings.guiScale == 1 ? 1 : 2;
-
-                            Keygrip.eventHandlerClient.workspace.oriScale = oriScale;
-
-                            mc.displayGuiScreen(Keygrip.eventHandlerClient.workspace);
-                        }
-                    }
-                    else if(Keygrip.eventHandlerClient.workspace != null)
-                    {
-                        if(event.keyBind.equals(Keygrip.config.startStopRecord))
-                        {
-                            Keygrip.eventHandlerClient.workspace.toggleRecording();
-                        }
-                        else if(event.keyBind.equals(Keygrip.config.toggleScenePlayback) && Keygrip.eventHandlerClient.workspace.hasOpenScene())
-                        {
-                            if(Keygrip.eventHandlerClient.workspace.getOpenScene().playing)
-                            {
-                                Keygrip.eventHandlerClient.workspace.getOpenScene().stop();
-
-                                Keygrip.channel.sendToServer(new PacketStopScene(Keygrip.eventHandlerClient.workspace.getOpenScene().identifier));
-                            }
-                            else
-                            {
-                                if(Keygrip.eventHandlerClient.workspace.sceneSendingCooldown <= 0)
-                                {
-                                    if(Keygrip.eventHandlerClient.workspace.timeline.timeline.getCurrentPos() > Keygrip.eventHandlerClient.workspace.getOpenScene().getLength())
-                                    {
-                                        Keygrip.eventHandlerClient.workspace.timeline.timeline.setCurrentPos(0);
-                                    }
-                                    if(GuiScreen.isCtrlKeyDown())
-                                    {
-                                        Minecraft.getMinecraft().displayGuiScreen(null);
-                                        Minecraft.getMinecraft().setIngameFocus();
-                                    }
-                                    Scene.sendSceneToServer(Keygrip.eventHandlerClient.workspace.getOpenScene());
-                                }
-                                Keygrip.eventHandlerClient.workspace.sceneSendingCooldown = 10;
-                            }
-                        }
-                    }
+                    Keygrip.eventHandlerClient.workspace = new GuiWorkspace(1);
                 }
+                int oriScale = mc.gameSettings.guiScale;
+                mc.gameSettings.guiScale = mc.gameSettings.guiScale == 1 ? 1 : 2;
+                Keygrip.eventHandlerClient.workspace.oriScale = oriScale;
+                mc.displayGuiScreen(Keygrip.eventHandlerClient.workspace);
+            }
+        }
+        else if(Keygrip.eventHandlerClient.workspace != null)
+        {
+            if(event.keyBind.equals(Keygrip.config.startStopRecord))
+            {
+                Keygrip.eventHandlerClient.workspace.toggleRecording();
+            }
+            else if(event.keyBind.equals(Keygrip.config.toggleScenePlayback) && Keygrip.eventHandlerClient.workspace.hasOpenScene())
+            {
+                if(Keygrip.eventHandlerClient.workspace.getOpenScene().playing)
+                {
+                    Keygrip.eventHandlerClient.workspace.getOpenScene().stop();
+                    Keygrip.channel.sendToServer(new PacketStopScene(Keygrip.eventHandlerClient.workspace.getOpenScene().identifier));
+                }
+                else
+                    {
+                        if(Keygrip.eventHandlerClient.workspace.sceneSendingCooldown <= 0)
+                        {
+                            if(Keygrip.eventHandlerClient.workspace.timeline.timeline.getCurrentPos() > Keygrip.eventHandlerClient.workspace.getOpenScene().getLength())
+                            {
+                                Keygrip.eventHandlerClient.workspace.timeline.timeline.setCurrentPos(0);
+                            }
+                            if(GuiScreen.isCtrlKeyDown())
+                            {
+                                Minecraft.getMinecraft().displayGuiScreen(null);
+                                Minecraft.getMinecraft().setIngameFocus();
+                            }
+                            Scene.sendSceneToServer(Keygrip.eventHandlerClient.workspace.getOpenScene());
+                        }
+                        Keygrip.eventHandlerClient.workspace.sceneSendingCooldown = 10;
+                    }
             }
         }
     }
@@ -124,8 +116,7 @@ public class EventHandlerClient
     @SubscribeEvent
     public void onRenderTick(TickEvent.RenderTickEvent event)
     {
-        if(event.phase == TickEvent.Phase.END)
-        {
+        if(event.phase != TickEvent.Phase.END) return;
             Minecraft mc = Minecraft.getMinecraft();
             if(actionToRecord != null && mc.world != null)
             {
@@ -164,7 +155,6 @@ public class EventHandlerClient
                     player.bedLocation = pos;
                 }
             }
-        }
     }
 
     @SubscribeEvent
@@ -217,7 +207,6 @@ public class EventHandlerClient
                         }
                     }
                 }
-
                 if(!actions.isEmpty())
                 {
                     actionToRecord.actionComponents.put(recordActionFrom, actions);
@@ -248,28 +237,19 @@ public class EventHandlerClient
 
                 ArrayList<ActionComponent> actions = actionToRecord.actionComponents.containsKey(recordActionFrom) ? actionToRecord.actionComponents.get(recordActionFrom) : new ArrayList<>();
 
-                for(int i = 0; i < nextState.inventory.length; i++)
-                {
-                    if(nextState.inventory[i] != prevState.inventory[i])
-                    {
-                        byte[] tag = null;
-                        if(nextState.inventory[i] != null)
-                        {
+                IntStream.range(0, nextState.inventory.length)
+                        .filter(i-> nextState.inventory[i] != prevState.inventory[i])
+                        .filter(i-> nextState.inventory[i] != null)
+                        .boxed()
+                        .collect(Collectors.toMap(i-> i, i-> {
                             NBTTagCompound nbt = new NBTTagCompound();
                             nextState.inventory[i].writeToNBT(nbt);
                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            try
-                            {
+                            try {
                                 CompressedStreamTools.writeCompressed(nbt, baos);
-                                tag = baos.toByteArray();
-                            }
-                            catch(IOException ignored)
-                            {
-                            }
-                        }
-                        actions.add(new ActionComponent(0, i + 1, tag));
-                    }
-                }
+                            } catch (IOException ignored) {}
+                            return baos.toByteArray();}))
+                        .forEach((i, tag)-> actions.add(new ActionComponent(0, i + 1, tag)));
                 if(nextState.swinging != prevState.swinging)
                 {
                     actions.add(new ActionComponent(4, 0, null));

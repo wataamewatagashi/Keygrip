@@ -1,5 +1,12 @@
 package me.ichun.mods.keygrip.common;
 
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+
+import java.io.File;
+
 import me.ichun.mods.ichunutil.common.core.Logger;
 import me.ichun.mods.ichunutil.common.core.config.ConfigHandler;
 import me.ichun.mods.ichunutil.common.core.network.PacketChannel;
@@ -10,12 +17,6 @@ import me.ichun.mods.keygrip.client.core.ResourceHelper;
 import me.ichun.mods.keygrip.common.core.Config;
 import me.ichun.mods.keygrip.common.core.EventHandlerServer;
 import me.ichun.mods.keygrip.common.core.ProxyCommon;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-
-import java.io.File;
 
 @Mod(modid = Keygrip.MOD_ID, name = Keygrip.MOD_NAME,
         version = Keygrip.VERSION,
@@ -45,12 +46,10 @@ public class Keygrip
     public static EventHandlerClient eventHandlerClient;
 
     @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent event)
-    {
+    public void preInit(FMLPreInitializationEvent event) {
         proxy.preInit();
 
-        if(FMLCommonHandler.instance().getEffectiveSide().isClient())
-        {
+        if(FMLCommonHandler.instance().getEffectiveSide().isClient()) {
             config = ConfigHandler.registerConfig(new Config(new File(ResourceHelper.getConfigDir(), "config.cfg")));
         }
 

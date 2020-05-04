@@ -83,8 +83,7 @@ public class Scene
                     if(playTime == a.startKey && a.precreateEntity != 1 && a.createState(server, (startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION)) {
                         if(a.state.ent == null) {
                             Keygrip.LOGGER.warn("Error initializing action: " + a.name);
-                        }
-                        else {
+                        } else {
                             a.state.ent.setLocationAndAngles((startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION, a.rotation[0] / (float)PRECISION, a.rotation[1] / (float)PRECISION);
                             a.state.ent.setUniqueId(UUID.randomUUID());
                             server.spawnEntity(a.state.ent);
@@ -94,18 +93,13 @@ public class Scene
                             }
                         }
                     }
-                    else if(playTime == a.startKey + a.getLength() && a.persistEntity != 1 && a.state != null && a.state.ent != null)
-                    {
+                    else if(playTime == a.startKey + a.getLength() && a.persistEntity != 1 && a.state != null && a.state.ent != null) {
                         a.state.ent.setDead();
-                        for(Entity ent : a.state.additionalEnts)
-                        {
-                            ent.setDead();
-                        }
+                        a.state.additionalEnts.forEach(Entity::setDead);
                         a.state = null;
                     }
                     a.doAction(this, playTime);
-                    if(playTime - a.startKey == 5 && a.state != null && a.state.ent != null && a.precreateEntity != 1)
-                    {
+                    if(playTime - a.startKey == 5 && a.state != null && a.state.ent != null && a.precreateEntity != 1) {
                         FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().sendPacketToAllPlayersInDimension(new SPacketEntityTeleport(a.state.ent), a.state.ent.world.provider.getDimension());
                     }
                 });
@@ -114,20 +108,14 @@ public class Scene
 
     public int getLength()
     {
-//        final int[] l = {0};
-//        actions.parallelStream().filter(action -> action.startKey + action.getLength() > l[0])
-//                .forEach(action -> l[0] = action.startKey + action.getLength());
-//        return l[0];
-        return actions.parallelStream().mapToInt(Action::getLength).max().orElse(0);
+        return actions.parallelStream().mapToInt(action-> action.startKey+action.getLength()).max().orElse(0);
     }
 
     public void create(WorldServer world)
     {
         server = world;
         actions.forEach(a -> {
-            if(playTime > a.startKey + a.getLength() && a.persistEntity != 1 || a.hidden == 1) {
-                return;
-            }
+            if(playTime > a.startKey + a.getLength() && a.persistEntity != 1 || a.hidden == 1) return;
             if(playTime < a.startKey && a.precreateEntity != 1) return;
             //create the related entity
             if(!a.createState(world, (startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION)) {
@@ -151,6 +139,7 @@ public class Scene
             LimbComponent lastLook = null;
             LimbComponent lastPos = null;
             int lastLookInt = -1;
+
             for(Map.Entry<Integer, LimbComponent> e : a.lookComponents.entrySet()) {
                 if(e.getKey() < lastLookInt || e.getKey() > playTime) continue;
 
@@ -184,7 +173,7 @@ public class Scene
 
     public void stop()
     {
-        actions.parallelStream()
+        actions.stream()
                 .filter(action -> action.state != null && action.state.ent != null)
                 .forEach(action -> {
                     action.state.ent.setDead();
@@ -195,7 +184,7 @@ public class Scene
 
     public void destroy()
     {
-        actions.parallelStream().filter(action -> action.state != null && action.state.ent != null)
+        actions.stream().filter(action -> action.state != null && action.state.ent != null)
                 .forEach(action -> {
                     action.state.ent.setDead();
                     action.state.additionalEnts.forEach(Entity::setDead);
@@ -236,8 +225,7 @@ public class Scene
 
             return scene;
         }
-        catch(IOException e)
-        {
+        catch(IOException e) {
             e.printStackTrace();
         }
         return null;
@@ -255,9 +243,7 @@ public class Scene
 
             return true;
         }
-        catch(IOException ignored)
-        {
-        }
+        catch(IOException ignored) {}
         return false;
     }
 
@@ -295,10 +281,8 @@ public class Scene
     {
         File temp = new File(ResourceHelper.getTempDir(), Math.abs(scene.hashCode()) + "-send.kgs");
 
-        if(Scene.saveScene(scene, temp))
-        {
-            try
-            {
+        if(Scene.saveScene(scene, temp)) {
+            try {
                 byte[] data = IOUtils.toByteArray(new FileInputStream(temp));
 
                 final int maxFile = 31000; //smaller packet cause I'm worried about too much info carried over from the bloat vs hat info.
@@ -321,13 +305,11 @@ public class Scene
 
                     int time = 0;
 
-                    if(Minecraft.getMinecraft().currentScreen instanceof GuiWorkspace)
-                    {
+                    if(Minecraft.getMinecraft().currentScreen instanceof GuiWorkspace) {
                         //open popup
                         GuiWorkspace workspace = (GuiWorkspace)Minecraft.getMinecraft().currentScreen;
                         time = workspace.timeline.timeline.getCurrentPos();
-                        if(time > scene.getLength())
-                        {
+                        if(time > scene.getLength()) {
                             time = 0;
                         }
                     }

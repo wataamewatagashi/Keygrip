@@ -41,26 +41,24 @@ public class WindowNewScene extends Window
         {
             workspace.removeWindow(this, true);
         }
-        if(element.id > 0)
-        {
-            String projName = "";
-            for (Element value : elements) {
-                if (value instanceof ElementTextInput) {
-                    ElementTextInput text = (ElementTextInput) value;
-                    if (text.id == 1) {
-                        projName = text.textField.getText();
-                    }
-                }
+        if(element.id <= 0) return;
+
+        String projName = "";
+        for (Element value : elements) {
+            if (!(value instanceof ElementTextInput)) continue;
+            ElementTextInput text = (ElementTextInput) value;
+            if (text.id == 1) {
+                projName = text.textField.getText();
             }
-            if(projName.isEmpty())
-            {
-                projName = "NewScene";
-            }
-            Scene scene = new Scene(projName);
-            ((GuiWorkspace)workspace).sceneManager.addScene(scene);
-            Minecraft mc = Minecraft.getMinecraft();
-            scene.startPos = new int[] { (int)Math.round(mc.player.posX * Scene.PRECISION), (int)Math.round(mc.player.posY * Scene.PRECISION), (int)Math.round(mc.player.posZ * Scene.PRECISION) };
-            workspace.removeWindow(this, true);
         }
+        if(projName.isEmpty())
+        {
+            projName = "NewScene";
+        }
+        Scene scene = new Scene(projName);
+        ((GuiWorkspace)workspace).sceneManager.addScene(scene);
+        Minecraft mc = Minecraft.getMinecraft();
+        scene.startPos = new int[] { (int)Math.round(mc.player.posX * Scene.PRECISION), (int)Math.round(mc.player.posY * Scene.PRECISION), (int)Math.round(mc.player.posZ * Scene.PRECISION) };
+        workspace.removeWindow(this, true);
     }
 }

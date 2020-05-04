@@ -102,13 +102,12 @@ public class WindowNewAction extends Window
                 } else if (e instanceof ElementSelector) {
                     ElementSelector selector = (ElementSelector) e;
                     Object obj = selector.choices.get(selector.selected);
-                    if (obj != null) {
-                        clzName = ((Class) obj).getName();
-                        if (EntityPlayer.class.isAssignableFrom((Class) obj)) {
-                            isPlayer = true;
-                            if (playerName.isEmpty()) {
-                                playerName = Minecraft.getMinecraft().player.getName();
-                            }
+                    if (obj == null) continue;
+                    clzName = ((Class) obj).getName();
+                    if (EntityPlayer.class.isAssignableFrom((Class) obj)) {
+                        isPlayer = true;
+                        if (playerName.isEmpty()) {
+                            playerName = Minecraft.getMinecraft().player.getName();
                         }
                     }
                 }

@@ -7,7 +7,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
@@ -35,22 +35,10 @@ public class WindowImportAction extends Window
         modelList = new ElementListTree(this, BORDER_SIZE + 1, BORDER_SIZE + 1 + 10, width - (BORDER_SIZE * 2 + 2), height - BORDER_SIZE - 22 - 16, 3, false, false);
         elements.add(modelList);
 
-        ArrayList<File> files = new ArrayList<>();
-
-        File[] textures = ResourceHelper.getActionsDir().listFiles();
-
-        for(File file : textures)
-        {
-            if(!file.isDirectory() && FilenameUtils.getExtension(file.getName()).equals("kga"))
-            {
-                files.add(file);
-            }
-        }
-
-        for(File file : files)
-        {
-            modelList.createTree(null, file, 26, 0, false, false);
-        }
+        Arrays.stream(ResourceHelper.getActionsDir().listFiles())
+                .filter(file -> !file.isDirectory())
+                .filter(file -> FilenameUtils.getExtension(file.getName()).equals("kga"))
+                .forEach(file -> modelList.createTree(null, file, 26, 0, false, false));
     }
 
     @Override
@@ -60,40 +48,35 @@ public class WindowImportAction extends Window
         {
             workspace.removeWindow(this, true);
         }
-        if((element.id == 1 || element.id == 3) && ((GuiWorkspace)workspace).hasOpenScene())
-        {
-            for(int i = 0; i < modelList.trees.size(); i++)
+        if((element.id == 1 || element.id == 3) && ((GuiWorkspace)workspace).hasOpenScene()) return;
+
+        for (ElementListTree.Tree tree : modelList.trees) {
+            if(!tree.selected) continue;
+
+            if(workspace.windowDragged == this)
             {
-                ElementListTree.Tree tree = modelList.trees.get(i);
-                if(tree.selected)
-                {
-                    if(workspace.windowDragged == this)
-                    {
-                        workspace.windowDragged = null;
-                    }
-                    Action action = Action.openAction((File)tree.attachedObject);
-                    if(action != null)
-                    {
-                        Minecraft mc = Minecraft.getMinecraft();
-                        Scene scene = ((GuiWorkspace)workspace).getOpenScene();
-                        action.identifier = RandomStringUtils.randomAscii(IOUtil.IDENTIFIER_LENGTH);
-                        action.startKey = ((GuiWorkspace)workspace).timeline.timeline.getCurrentPos();
-                        //TODO remember to doc down that importing refs the player.
-                        if(!GuiScreen.isShiftKeyDown())
-                        {
-                            action.offsetPos = new int[] { (int)Math.round(mc.player.posX * Scene.PRECISION) - scene.startPos[0], (int)Math.round(mc.player.posY * Scene.PRECISION) - scene.startPos[1], (int)Math.round(mc.player.posZ * Scene.PRECISION) - scene.startPos[2] };
-                        }
-                        scene.actions.add(action);
-                        Collections.sort(scene.actions);
-                        workspace.removeWindow(this, true);
-                    }
-                    else
-                    {
-                        workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.importAction.failed").putInMiddleOfScreen());
-                    }
-                    break;
-                }
+                workspace.windowDragged = null;
             }
+            Action action = Action.openAction((File)tree.attachedObject);
+            if(action != null)
+            {
+                Minecraft mc = Minecraft.getMinecraft();
+                Scene scene = ((GuiWorkspace)workspace).getOpenScene();
+                action.identifier = RandomStringUtils.randomAscii(IOUtil.IDENTIFIER_LENGTH);
+                action.startKey = ((GuiWorkspace)workspace).timeline.timeline.getCurrentPos();
+                //TODO remember to doc down that importing refs the player.
+                if(!GuiScreen.isShiftKeyDown())
+                {
+                    action.offsetPos = new int[] { (int)Math.round(mc.player.posX * Scene.PRECISION) - scene.startPos[0], (int)Math.round(mc.player.posY * Scene.PRECISION) - scene.startPos[1], (int)Math.round(mc.player.posZ * Scene.PRECISION) - scene.startPos[2] };
+                }
+                scene.actions.add(action);
+                Collections.sort(scene.actions);
+                workspace.removeWindow(this, true);
+            }
+            else {
+                workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.importAction.failed").putInMiddleOfScreen());
+            }
+            break;
         }
     }
 }

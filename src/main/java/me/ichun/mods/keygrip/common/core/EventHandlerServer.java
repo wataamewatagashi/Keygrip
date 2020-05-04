@@ -1,12 +1,9 @@
 package me.ichun.mods.keygrip.common.core;
 
-import me.ichun.mods.keygrip.client.core.ResourceHelper;
-import me.ichun.mods.keygrip.common.Keygrip;
-import me.ichun.mods.keygrip.common.packet.PacketSceneStatus;
-import me.ichun.mods.keygrip.common.scene.Scene;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -14,27 +11,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import me.ichun.mods.keygrip.client.core.ResourceHelper;
+import me.ichun.mods.keygrip.common.Keygrip;
+import me.ichun.mods.keygrip.common.packet.PacketSceneStatus;
+import me.ichun.mods.keygrip.common.scene.Scene;
+
 public class EventHandlerServer
 {
     @SubscribeEvent
     public void onServerTick(TickEvent.ServerTickEvent event)
     {
-        if(event.phase.equals(TickEvent.Phase.START))
-        {
-            for(int i = scenesToPlay.size() - 1; i >= 0; i--)
-            {
-                Scene scene = scenesToPlay.get(i);
-                scene.update();
-                if(scene.playTime > scene.getLength() + 10)
-                {
-                    scene.stop();
-                    scene.destroy();
-                    scenesToPlay.remove(i);
-
-                    Keygrip.channel.sendToAll(new PacketSceneStatus(scene.playTime, scene.identifier, false));
-                }
-            }
-        }
+        if(!event.phase.equals(TickEvent.Phase.START)) return;
+        scenesToPlay.removeIf(scene ->{
+            scene.update();
+            if (scene.playTime <= scene.getLength() + 10) return false;
+            scene.stop();
+            scene.destroy();
+            Keygrip.channel.sendToAll(new PacketSceneStatus(scene.playTime, scene.identifier, false));
+            return true;
+        });
     }
 
     public void receiveProjectData(int dimension, int startPoint, String sceneIdent, short packetTotal, short packetNumber, byte[] data)
@@ -42,7 +37,7 @@ public class EventHandlerServer
         ArrayList<byte[]> byteArray = sceneParts.get(sceneIdent);
         if(byteArray == null)
         {
-            byteArray = new ArrayList<byte[]>();
+            byteArray = new ArrayList<>();
 
             sceneParts.put(sceneIdent, byteArray);
 
@@ -54,39 +49,23 @@ public class EventHandlerServer
 
         byteArray.set(packetNumber, data);
 
-        boolean hasAllInfo = true;
-
-        for(int i = 0; i < byteArray.size(); i++)
-        {
-            byte[] byteList = byteArray.get(i);
-            if(byteList.length == 0)
-            {
-                hasAllInfo = false;
-            }
-        }
+        boolean hasAllInfo = byteArray.parallelStream()
+                .noneMatch(aByte -> aByte.length == 0);
 
         if(hasAllInfo)
         {
-            int size = 0;
-
-            for(byte[] aByteArray : byteArray)
-            {
-                size += aByteArray.length;
-            }
-
+            int size = byteArray.parallelStream().mapToInt(value -> value.length).sum();
             byte[] bytes = new byte[size];
-
             int index = 0;
 
-            for(int i = 0; i < byteArray.size(); i++)
-            {
-                System.arraycopy(byteArray.get(i), 0, bytes, index, byteArray.get(i).length);
-                index += byteArray.get(i).length;
+            for (byte[] aByte : byteArray) {
+                System.arraycopy(aByte, 0, bytes, index, aByte.length);
+                index += aByte.length;
             }
 
             //At this point, bytes has the full data. Do something with it.
 
-            File temp = new File(ResourceHelper.getTempDir(), Integer.toString(Math.abs(sceneIdent.hashCode())) + "-received.kgs");
+            File temp = new File(ResourceHelper.getTempDir(), Math.abs(sceneIdent.hashCode()) + "-received.kgs");
 
             try
             {
@@ -97,16 +76,12 @@ public class EventHandlerServer
 
                     if(scene != null)
                     {
-                        for(int i = scenesToPlay.size() - 1; i >= 0; i--)
-                        {
-                            Scene scener = scenesToPlay.get(i);
-                            if(scener.identifier.equals(scene.identifier))
-                            {
-                                scener.stop();
-                                scener.destroy();
-                                scenesToPlay.remove(i);
-                            }
-                        }
+                        scenesToPlay.removeIf(scene1 -> {
+                            if (!scene1.identifier.equals(scene.identifier)) return false;
+                            scene1.stop();
+                            scene1.destroy();
+                            return true;
+                        });
 
                         scene.playing = true;
                         scene.playTime = startPoint;
@@ -121,9 +96,9 @@ public class EventHandlerServer
                     temp.delete();
                 }
             }
-            catch(IOException ignored)
+            catch(IOException e)
             {
-                ignored.printStackTrace();
+                e.printStackTrace();
             }
 
             sceneParts.remove(sceneIdent);

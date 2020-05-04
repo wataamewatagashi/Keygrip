@@ -1,5 +1,10 @@
 package me.ichun.mods.keygrip.client.gui.window;
 
+import org.apache.commons.io.FilenameUtils;
+
+import java.io.File;
+import java.util.Arrays;
+
 import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
 import me.ichun.mods.ichunutil.client.gui.window.Window;
 import me.ichun.mods.ichunutil.client.gui.window.WindowPopup;
@@ -9,10 +14,6 @@ import me.ichun.mods.ichunutil.client.gui.window.element.ElementListTree;
 import me.ichun.mods.keygrip.client.core.ResourceHelper;
 import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
 import me.ichun.mods.keygrip.common.scene.Scene;
-import org.apache.commons.io.FilenameUtils;
-
-import java.io.File;
-import java.util.ArrayList;
 
 public class WindowOpenScene extends Window
 {
@@ -27,22 +28,10 @@ public class WindowOpenScene extends Window
         modelList = new ElementListTree(this, BORDER_SIZE + 1, BORDER_SIZE + 1 + 10, width - (BORDER_SIZE * 2 + 2), height - BORDER_SIZE - 22 - 16, 3, false, false);
         elements.add(modelList);
 
-        ArrayList<File> files = new ArrayList<File>();
-
-        File[] textures = ResourceHelper.getScenesDir().listFiles();
-
-        for(File file : textures)
-        {
-            if(!file.isDirectory() && FilenameUtils.getExtension(file.getName()).equals("kgs"))
-            {
-                files.add(file);
-            }
-        }
-
-        for(File file : files)
-        {
-            modelList.createTree(null, file, 26, 0, false, false);
-        }
+        Arrays.stream(ResourceHelper.getScenesDir().listFiles())
+                .filter(file -> !file.isDirectory())
+                .filter(file -> FilenameUtils.getExtension(file.getName()).equals("kgs"))
+                .forEach(file -> modelList.createTree(null, file, 26, 0, false, false));
     }
 
     @Override
@@ -58,30 +47,25 @@ public class WindowOpenScene extends Window
         {
             workspace.removeWindow(this, true);
         }
-        if((element.id == 1 || element.id == 3))
-        {
-            for(int i = 0; i < modelList.trees.size(); i++)
+        if((element.id != 1 && element.id != 3)) return;
+        for (ElementListTree.Tree tree : modelList.trees) {
+            if(!tree.selected) continue;
+            if(workspace.windowDragged == this)
             {
-                ElementListTree.Tree tree = modelList.trees.get(i);
-                if(tree.selected)
-                {
-                    if(workspace.windowDragged == this)
-                    {
-                        workspace.windowDragged = null;
-                    }
-                    Scene scene = Scene.openScene((File)tree.attachedObject);
-                    if(scene == null)
-                    {
-                        workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.open.failed").putInMiddleOfScreen());
-                    }
-                    else
-                    {
-                        ((GuiWorkspace)workspace).sceneManager.addScene(scene);
-                        workspace.removeWindow(this, true);
-                    }
-                    break;
-                }
+                workspace.windowDragged = null;
             }
-        }
+            Scene scene = Scene.openScene((File)tree.attachedObject);
+            if(scene == null)
+            {
+                workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.open.failed").putInMiddleOfScreen());
+            }
+            else {
+                ((GuiWorkspace)workspace).sceneManager.addScene(scene);
+                workspace.removeWindow(this, true);
+            }
+            break;
+            }
+
     }
 }
+

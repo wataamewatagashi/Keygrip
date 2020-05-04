@@ -1,5 +1,7 @@
 package me.ichun.mods.keygrip.client.gui.window;
 
+import net.minecraft.client.resources.I18n;
+
 import me.ichun.mods.ichunutil.client.gui.Theme;
 import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
 import me.ichun.mods.ichunutil.client.gui.window.Window;
@@ -9,7 +11,6 @@ import me.ichun.mods.ichunutil.client.gui.window.element.ElementNumberInput;
 import me.ichun.mods.ichunutil.client.gui.window.element.ElementTextInput;
 import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
 import me.ichun.mods.keygrip.common.scene.Scene;
-import net.minecraft.util.text.translation.I18n;
 
 public class WindowEditScene extends Window
 {
@@ -32,11 +33,11 @@ public class WindowEditScene extends Window
     public void draw(int mouseX, int mouseY)
     {
         super.draw(mouseX, mouseY);
-        if(!minimized)
-        {
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.newScene.name"), posX + 11, posY + 20, Theme.getAsHex(workspace.currentTheme.font), false);
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.editScene.position"), posX + 11, posY + 55, Theme.getAsHex(workspace.currentTheme.font), false);
-        }
+        if(minimized) return;
+
+        workspace.getFontRenderer().drawString(I18n.format("window.newScene.name"), posX + 11, posY + 20, Theme.getAsHex(workspace.currentTheme.font), false);
+        workspace.getFontRenderer().drawString(I18n.format("window.editScene.position"), posX + 11, posY + 55, Theme.getAsHex(workspace.currentTheme.font), false);
+
     }
 
     @Override
@@ -46,34 +47,32 @@ public class WindowEditScene extends Window
         {
             workspace.removeWindow(this, true);
         }
-        if(element.id > 0)
-        {
-            String projName = "";
-            int[] startPos = new int[3];
-            for(int i = 0; i < elements.size(); i++)
+        if(element.id <= 0) return;
+
+        String projName = "";
+        int[] startPos = new int[3];
+        for (Element value : elements) {
+            if (value instanceof ElementTextInput)
             {
-                if(elements.get(i) instanceof ElementTextInput)
+                ElementTextInput text = (ElementTextInput) value;
+                if (text.id == 1)
                 {
-                    ElementTextInput text = (ElementTextInput)elements.get(i);
-                    if(text.id == 1)
-                    {
-                        projName = text.textField.getText();
-                    }
-                }
-                else if(elements.get(i) instanceof ElementNumberInput)
-                {
-                    ElementNumberInput nums = (ElementNumberInput)elements.get(i);
-                    startPos = new int[] { (int)Math.round(Double.parseDouble(nums.textFields.get(0).getText()) * Scene.PRECISION), (int)Math.round(Double.parseDouble(nums.textFields.get(1).getText()) * Scene.PRECISION), (int)Math.round(Double.parseDouble(nums.textFields.get(2).getText()) * Scene.PRECISION) };
+                    projName = text.textField.getText();
                 }
             }
-            if(projName.isEmpty())
+            else if (value instanceof ElementNumberInput)
             {
-                return;
+                ElementNumberInput nums = (ElementNumberInput) value;
+                startPos = new int[]{(int) Math.round(Double.parseDouble(nums.textFields.get(0).getText()) * Scene.PRECISION), (int) Math.round(Double.parseDouble(nums.textFields.get(1).getText()) * Scene.PRECISION), (int) Math.round(Double.parseDouble(nums.textFields.get(2).getText()) * Scene.PRECISION)};
             }
-            currentScene.name = projName;
-            currentScene.startPos = startPos;
-            ((GuiWorkspace)workspace).sceneManager.resized();
-            workspace.removeWindow(this, true);
         }
+        if(projName.isEmpty())
+        {
+            return;
+        }
+        currentScene.name = projName;
+        currentScene.startPos = startPos;
+        ((GuiWorkspace)workspace).sceneManager.resized();
+        workspace.removeWindow(this, true);
     }
 }

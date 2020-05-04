@@ -1,5 +1,9 @@
 package me.ichun.mods.keygrip.client.gui.window;
 
+import net.minecraft.client.resources.I18n;
+
+import java.io.File;
+
 import me.ichun.mods.ichunutil.client.gui.Theme;
 import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
 import me.ichun.mods.ichunutil.client.gui.window.Window;
@@ -8,9 +12,6 @@ import me.ichun.mods.ichunutil.client.gui.window.element.Element;
 import me.ichun.mods.ichunutil.client.gui.window.element.ElementButton;
 import me.ichun.mods.ichunutil.common.core.util.IOUtil;
 import me.ichun.mods.keygrip.common.scene.Scene;
-import net.minecraft.util.text.translation.I18n;
-
-import java.io.File;
 
 public class WindowOverwrite extends Window
 {
@@ -34,10 +35,9 @@ public class WindowOverwrite extends Window
     public void draw(int mouseX, int mouseY)
     {
         super.draw(mouseX, mouseY);
-        if(!minimized)
-        {
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.saveAs.confirmOverwrite"), posX + 15, posY + 40, Theme.getAsHex(workspace.currentTheme.font), false);
-        }
+        if(minimized) return;
+
+        workspace.getFontRenderer().drawString(I18n.format("window.saveAs.confirmOverwrite"), posX + 15, posY + 40, Theme.getAsHex(workspace.currentTheme.font), false);
     }
 
     @Override
@@ -47,27 +47,24 @@ public class WindowOverwrite extends Window
         {
             workspace.removeWindow(this, true);
         }
-        if(element.id == 3)
+        if(element.id != 3) return;
+
+        if(workspace.windowDragged == this)
         {
-            if(workspace.windowDragged == this)
-            {
-                workspace.windowDragged = null;
-            }
-
-            if(Scene.saveScene(scene, saveFile))
-            {
-                scene.saveFile = saveFile;
-                scene.saveFileMd5 = IOUtil.getMD5Checksum(saveFile);
-
-                Scene.saveSceneActions(scene);
-
-                parentWindow.shouldClose = true;
-            }
-            else
-            {
-                workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.saveAs.failed").putInMiddleOfScreen());
-            }
-            workspace.removeWindow(this, true);
+            workspace.windowDragged = null;
         }
+        if(Scene.saveScene(scene, saveFile))
+        {
+            scene.saveFile = saveFile;
+            scene.saveFileMd5 = IOUtil.getMD5Checksum(saveFile);
+
+            Scene.saveSceneActions(scene);
+
+            parentWindow.shouldClose = true;
+        }
+        else {
+            workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.saveAs.failed").putInMiddleOfScreen());
+        }
+        workspace.removeWindow(this, true);
     }
 }

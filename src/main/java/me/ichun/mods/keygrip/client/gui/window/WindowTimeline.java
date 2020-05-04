@@ -50,35 +50,27 @@ public class WindowTimeline extends Window
     @Override
     public void elementTriggered(Element element)
     {
-        if(parent.hasOpenScene())
+        if(!parent.hasOpenScene()) return;
+
+        if(element.id == ID_NEW_ACTION)
         {
-            if(element.id == ID_NEW_ACTION)
+            workspace.addWindowOnTop(new WindowNewAction(workspace, workspace.width / 2 - 100, workspace.height / 2 - 80, 200, 220, 200, 220).putInMiddleOfScreen());
+        }
+        else if(element.id == ID_EDIT_ACTION && !parent.timeline.timeline.selectedIdentifier.isEmpty())
+        {
+            workspace.addWindowOnTop(new WindowEditAction(workspace, workspace.width / 2 - 100, workspace.height / 2 - 80, 200, 260, 200, 260).putInMiddleOfScreen());
+        }
+        else if(element.id == ID_DEL_ACTION && !parent.timeline.timeline.selectedIdentifier.isEmpty())
             {
-                workspace.addWindowOnTop(new WindowNewAction(workspace, workspace.width / 2 - 100, workspace.height / 2 - 80, 200, 220, 200, 220).putInMiddleOfScreen());
-            }
-            else if(element.id == ID_EDIT_ACTION)
-            {
-                if(!parent.timeline.timeline.selectedIdentifier.isEmpty())
+                Scene scene = parent.getOpenScene();
+                for(int i = scene.actions.size() - 1; i >= 0; i--)
                 {
-                    workspace.addWindowOnTop(new WindowEditAction(workspace, workspace.width / 2 - 100, workspace.height / 2 - 80, 200, 260, 200, 260).putInMiddleOfScreen());
-                }
-            }
-            else if(element.id == ID_DEL_ACTION)
-            {
-                if(!parent.timeline.timeline.selectedIdentifier.isEmpty())
-                {
-                    Scene scene = parent.getOpenScene();
-                    for(int i = scene.actions.size() - 1; i >= 0; i--)
-                    {
-                        Action act = scene.actions.get(i);
-                        if(act.identifier.equals(parent.timeline.timeline.selectedIdentifier))
-                        {
-                            scene.actions.remove(i);
-                            parent.timeline.timeline.selectedIdentifier = "";
-                            Collections.sort(scene.actions);
-                            break;
-                        }
-                    }
+                    Action act = scene.actions.get(i);
+                    if(!act.identifier.equals(parent.timeline.timeline.selectedIdentifier)) continue;
+                    scene.actions.remove(i);
+                    parent.timeline.timeline.selectedIdentifier = "";
+                    Collections.sort(scene.actions);
+                    break;
                 }
             }
             else if(element.id == ID_REC_ACTION)
@@ -119,7 +111,7 @@ public class WindowTimeline extends Window
                     Keygrip.channel.sendToServer(new PacketStopScene(parent.getOpenScene().identifier));
                 }
             }
-        }
+
     }
 
     @Override

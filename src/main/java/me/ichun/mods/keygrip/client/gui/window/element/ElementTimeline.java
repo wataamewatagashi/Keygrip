@@ -30,8 +30,7 @@ public class ElementTimeline extends Element
 
     public static final int buttonsWidth = 121; //including the 1 pix border.
 
-    public ElementTimeline(Window window, int x, int y, int w, int h, int ID)
-    {
+    public ElementTimeline(Window window, int x, int y, int w, int h, int ID) {
         super(window, x, y, w, h, ID, false);
 
         selectedIdentifier = "";
@@ -110,16 +109,14 @@ public class ElementTimeline extends Element
         //Timeline
         RendererHelper.startGlScissor(getPosX() + buttonsWidth, getPosY() - 1, width - (hasScrollVert ? buttonsWidth + 10 : buttonsWidth), height + 3);
 
-        if(Mouse.isButtonDown(0) && mouseInBoundary(mouseX, mouseY) && parent.workspace.elementHovered == this && parent.workspace.hoverTime > 5)
+        if(Mouse.isButtonDown(0) && mouseInBoundary(mouseX, mouseY) && parent.workspace.elementHovered == this && parent.workspace.hoverTime > 5
+            && mouseX > posX + buttonsWidth - 1 && mouseX < posX + (hasScrollVert ? width - 10 : width) && mouseY < posY + height - 10)
         {
-            if(mouseX > posX + buttonsWidth - 1 && mouseX < posX + (hasScrollVert ? width - 10 : width) && mouseY < posY + height - 10)
+            double tickPos = (int)(mouseX - (posX + buttonsWidth - 1 - 1) + (hasScrollHori ? ((double)(((timeWidth + 20) * tickWidth) - (width - (hasScrollVert ? buttonsWidth + 10 : buttonsWidth))) * sliderProgHori) : 0));
+            setCurrentPos((int)Math.max(0, tickPos / (double)tickWidth));
+            if(currentScene != null && currentScene.playing)
             {
-                double tickPos = (int)(mouseX - (posX + buttonsWidth - 1 - 1) + (hasScrollHori ? ((double)(((timeWidth + 20) * tickWidth) - (width - (hasScrollVert ? buttonsWidth + 10 : buttonsWidth))) * sliderProgHori) : 0));
-                setCurrentPos((int)Math.max(0, tickPos / (double)tickWidth));
-                if(currentScene != null && currentScene.playing)
-                {
-                    currentScene.playTime = currentPos;
-                }
+                currentScene.playTime = currentPos;
             }
         }
 
@@ -313,26 +310,21 @@ public class ElementTimeline extends Element
                 currentScene = ((GuiWorkspace)parent.workspace).getOpenScene();
             }
 
-            if(currentScene != null)
+            if(currentScene == null) return false;
+
+            final int spacingY = 13;
+            size = currentScene.actions.size() * spacingY;
+
+            int idClicked = (int)(mouseY - posY + ((size - (height - 20)) * sliderProgVert)) / 13; //spacing = 13
+
+            for(int i = 0; i < currentScene.actions.size(); i++)
             {
-                final int spacingY = 13;
-                size = currentScene.actions.size() * spacingY;
-
-                int idClicked = (int)(mouseY - posY + ((size - (height - 20)) * sliderProgVert)) / 13; //spacing = 13
-
-
-                for(int i = 0; i < currentScene.actions.size(); i++)
-                {
-                    if(idClicked == i)
-                    {
-                        selectedIdentifier = currentScene.actions.get(i).identifier;
-                        if(id == 1)
-                        {
-                            currentScene.actions.get(i).hidden = currentScene.actions.get(i).hidden == 1 ? 0 : 1;
-                        }
-                        break;
-                    }
+                if(idClicked != i) continue;
+                selectedIdentifier = currentScene.actions.get(i).identifier;
+                if(id == 1) {
+                    currentScene.actions.get(i).hidden = currentScene.actions.get(i).hidden == 1 ? 0 : 1;
                 }
+                break;
             }
         }
         return false;//return true for elements that has input eg typing
@@ -346,8 +338,7 @@ public class ElementTimeline extends Element
         int timeWidth = 0;
         Scene currentScene = null;
 
-        if(!((GuiWorkspace)parent.workspace).sceneManager.scenes.isEmpty())
-        {
+        if(!((GuiWorkspace)parent.workspace).sceneManager.scenes.isEmpty()) {
             currentScene = ((GuiWorkspace)parent.workspace).sceneManager.scenes.get(((GuiWorkspace)parent.workspace).sceneManager.selectedScene);
         }
 
@@ -400,7 +391,7 @@ public class ElementTimeline extends Element
             final int spacingY = 13;
             int offY = 0;
 
-            for(Action a : currentScene.actions)
+            for(Action ignored : currentScene.actions)
             {
                 offY += spacingY;
             }

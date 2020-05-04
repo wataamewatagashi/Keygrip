@@ -1,5 +1,7 @@
 package me.ichun.mods.keygrip.client.gui.window;
 
+import net.minecraft.client.resources.I18n;
+
 import me.ichun.mods.ichunutil.client.gui.Theme;
 import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
 import me.ichun.mods.ichunutil.client.gui.window.Window;
@@ -7,7 +9,6 @@ import me.ichun.mods.ichunutil.client.gui.window.element.Element;
 import me.ichun.mods.ichunutil.client.gui.window.element.ElementButton;
 import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
 import me.ichun.mods.keygrip.common.scene.Scene;
-import net.minecraft.util.text.translation.I18n;
 
 public class WindowSaveBeforeClosing extends Window
 {
@@ -28,11 +29,10 @@ public class WindowSaveBeforeClosing extends Window
     public void draw(int mouseX, int mouseY)
     {
         super.draw(mouseX, mouseY);
-        if(!minimized)
-        {
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.notSaved.unsaved"), posX + 15, posY + 40, Theme.getAsHex(workspace.currentTheme.font), false);
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.notSaved.save"), posX + 15, posY + 52, Theme.getAsHex(workspace.currentTheme.font), false);
-        }
+        if(minimized) return;
+
+        workspace.getFontRenderer().drawString(I18n.format("window.notSaved.unsaved"), posX + 15, posY + 40, Theme.getAsHex(workspace.currentTheme.font), false);
+        workspace.getFontRenderer().drawString(I18n.format("window.notSaved.save"), posX + 15, posY + 52, Theme.getAsHex(workspace.currentTheme.font), false);
     }
 
     @Override
@@ -46,14 +46,13 @@ public class WindowSaveBeforeClosing extends Window
                 ((GuiWorkspace)workspace).sceneManager.removeScene(project.identifier);
             }
         }
-        if(element.id == 3)
+        if(element.id != 3) return;
+
+        if(workspace.windowDragged == this)
         {
-            if(workspace.windowDragged == this)
-            {
-                workspace.windowDragged = null;
-            }
-            ((GuiWorkspace)workspace).save(true);
-            workspace.removeWindow(this, true);
+            workspace.windowDragged = null;
         }
+        ((GuiWorkspace)workspace).save(true);
+        workspace.removeWindow(this, true);
     }
 }

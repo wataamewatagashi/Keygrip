@@ -1,5 +1,9 @@
 package me.ichun.mods.keygrip.client.gui.window;
 
+import net.minecraft.client.resources.I18n;
+
+import java.io.File;
+
 import me.ichun.mods.ichunutil.client.gui.Theme;
 import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
 import me.ichun.mods.ichunutil.client.gui.window.Window;
@@ -12,9 +16,6 @@ import me.ichun.mods.ichunutil.common.core.util.IOUtil;
 import me.ichun.mods.keygrip.client.core.ResourceHelper;
 import me.ichun.mods.keygrip.client.gui.GuiWorkspace;
 import me.ichun.mods.keygrip.common.scene.Scene;
-import net.minecraft.util.text.translation.I18n;
-
-import java.io.File;
 
 public class WindowSaveAs extends Window
 {
@@ -39,24 +40,20 @@ public class WindowSaveAs extends Window
     @Override
     public void update()
     {
-        if(shouldClose)
-        {
-            workspace.removeWindow(this, true);
-            if(closeProject && !((GuiWorkspace)workspace).sceneManager.scenes.isEmpty())
-            {
-                ((GuiWorkspace)workspace).sceneManager.removeScene(((GuiWorkspace)workspace).sceneManager.scenes.get(((GuiWorkspace)workspace).sceneManager.selectedScene).identifier);
-            }
-        }
+        if(!shouldClose) return;
+        workspace.removeWindow(this, true);
+        if(closeProject || ((GuiWorkspace)workspace).sceneManager.scenes.isEmpty()) return;
+
+        ((GuiWorkspace)workspace).sceneManager.removeScene(((GuiWorkspace)workspace).sceneManager.scenes.get(((GuiWorkspace)workspace).sceneManager.selectedScene).identifier);
     }
 
     @Override
     public void draw(int mouseX, int mouseY)
     {
         super.draw(mouseX, mouseY);
-        if(!minimized)
-        {
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.saveAs.fileName"), posX + 11, posY + 20, Theme.getAsHex(workspace.currentTheme.font), false);
-        }
+        if(minimized) return;
+
+        workspace.getFontRenderer().drawString(I18n.format("window.saveAs.fileName"), posX + 11, posY + 20, Theme.getAsHex(workspace.currentTheme.font), false);
     }
 
     @Override
@@ -66,62 +63,51 @@ public class WindowSaveAs extends Window
         {
             workspace.removeWindow(this, true);
         }
-        if(element.id == 3)
+        if(element.id != 3) return;
+
+        String projName = "";
+        for (Element value : elements) {
+            if (value instanceof ElementTextInput) {
+                ElementTextInput text = (ElementTextInput) value;
+                if (text.id == 1) {
+                    projName = text.textField.getText();
+                }
+            }
+        }
+        if(projName.isEmpty()) return;
+
+        if(!projName.endsWith(".kgs"))
         {
-            String projName = "";
-            for(int i = 0; i < elements.size(); i++)
+            projName = projName + ".kgs";
+        }
+
+        File file = new File(ResourceHelper.getScenesDir(), projName);
+
+        Scene scene = ((GuiWorkspace)workspace).sceneManager.scenes.get(((GuiWorkspace)workspace).sceneManager.selectedScene);
+
+        if(workspace.windowDragged == this)
+        {
+            workspace.windowDragged = null;
+        }
+        if(file.exists())
+        {
+            workspace.addWindowOnTop(new WindowOverwrite(workspace, this, scene, file).putInMiddleOfScreen());
+        }
+        else {
+            if(Scene.saveScene(scene, file))
             {
-                if(elements.get(i) instanceof ElementTextInput)
+                scene.saveFile = file;
+                scene.saveFileMd5 = IOUtil.getMD5Checksum(file);
+                Scene.saveSceneActions(scene);
+                workspace.removeWindow(this, true);
+
+                if(closeProject && !((GuiWorkspace)workspace).sceneManager.scenes.isEmpty())
                 {
-                    ElementTextInput text = (ElementTextInput)elements.get(i);
-                    if(text.id == 1)
-                    {
-                        projName = text.textField.getText();
-                    }
+                    ((GuiWorkspace)workspace).sceneManager.removeScene(scene.identifier);
                 }
             }
-            if(projName.isEmpty())
-            {
-                return;
-            }
-
-            if(!projName.endsWith(".kgs"))
-            {
-                projName = projName + ".kgs";
-            }
-
-            File file = new File(ResourceHelper.getScenesDir(), projName);
-
-            Scene scene = ((GuiWorkspace)workspace).sceneManager.scenes.get(((GuiWorkspace)workspace).sceneManager.selectedScene);
-
-            if(workspace.windowDragged == this)
-            {
-                workspace.windowDragged = null;
-            }
-            if(file.exists())
-            {
-                workspace.addWindowOnTop(new WindowOverwrite(workspace, this, scene, file).putInMiddleOfScreen());
-            }
-            else
-            {
-                if(Scene.saveScene(scene, file))
-                {
-                    scene.saveFile = file;
-                    scene.saveFileMd5 = IOUtil.getMD5Checksum(file);
-
-                    Scene.saveSceneActions(scene);
-
-                    workspace.removeWindow(this, true);
-
-                    if(closeProject && !((GuiWorkspace)workspace).sceneManager.scenes.isEmpty())
-                    {
-                        ((GuiWorkspace)workspace).sceneManager.removeScene(scene.identifier);
-                    }
-                }
-                else
-                {
-                    workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.saveAs.failed").putInMiddleOfScreen());
-                }
+            else {
+                workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.saveAs.failed").putInMiddleOfScreen());
             }
         }
     }

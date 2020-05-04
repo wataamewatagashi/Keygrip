@@ -7,7 +7,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import io.netty.buffer.ByteBuf;
 import me.ichun.mods.ichunutil.common.core.network.AbstractPacket;
 import me.ichun.mods.keygrip.common.Keygrip;
-import me.ichun.mods.keygrip.common.scene.Scene;
 
 public class PacketStopScene extends AbstractPacket
 {
@@ -35,18 +34,13 @@ public class PacketStopScene extends AbstractPacket
     @Override
     public void execute(Side side, EntityPlayer player)
     {
-        for(int i = Keygrip.eventHandlerServer.scenesToPlay.size() - 1; i >= 0; i--)
-        {
-            Scene scene = Keygrip.eventHandlerServer.scenesToPlay.get(i);
-            if(scene.identifier.equals(sceneIdent))
-            {
-                scene.stop();
-                scene.destroy();
-                Keygrip.eventHandlerServer.scenesToPlay.remove(i);
-
-                Keygrip.channel.sendToDimension(new PacketSceneStatus(scene.playTime, sceneIdent, false), player.dimension);
-            }
-        }
+        Keygrip.eventHandlerServer.scenesToPlay.removeIf(scene -> {
+            if (!scene.identifier.equals(sceneIdent)) return false;
+            scene.stop();
+            scene.destroy();
+            Keygrip.channel.sendToDimension(new PacketSceneStatus(scene.playTime, sceneIdent, false), player.dimension);
+            return true;
+        });
     }
 
     @Override

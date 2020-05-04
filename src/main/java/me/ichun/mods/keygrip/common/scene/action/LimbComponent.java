@@ -1,17 +1,16 @@
 package me.ichun.mods.keygrip.common.scene.action;
 
 import com.google.gson.annotations.SerializedName;
+
+import java.util.Arrays;
+
 import me.ichun.mods.keygrip.common.scene.Scene;
 
 public class LimbComponent
 {
     public LimbComponent(double... changes)
     {
-        actionChange = new int[changes.length];
-        for(int i = 0; i < changes.length; i++)
-        {
-            actionChange[i] = (int)Math.round(changes[i] * (double)Scene.PRECISION);
-        }
+        actionChange = Arrays.stream(changes).mapToInt(value -> Math.toIntExact(Math.round(value * (double) Scene.PRECISION))).toArray();
     }
 
     @SerializedName("a")

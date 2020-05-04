@@ -4,10 +4,10 @@ import com.google.common.base.Splitter;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 
 import java.util.Collections;
@@ -34,15 +34,9 @@ public class WindowEditAction extends Window
         super(parent, x, y, w, h, minW, minH, "window.editAction.title", true);
 
         Scene scene = ((GuiWorkspace)parent).getOpenScene();
-        Action action = null;
-        for(Action act : scene.actions)
-        {
-            if(act.identifier.equals(((GuiWorkspace)parent).timeline.timeline.selectedIdentifier))
-            {
-                action = act;
-                break;
-            }
-        }
+        Action action = scene.actions.parallelStream()
+                .filter(act -> act.identifier.equals(((GuiWorkspace)parent).timeline.timeline.selectedIdentifier))
+                .findFirst().orElse(null);
 
         elements.add(new ElementTextInput(this, 10, 30, width - 20, 12, 1, "window.newAction.name", action != null ? action.name : ""));
         elements.add(new ElementTextInput(this, 10, 135, width - 20, 12, 2, "window.newAction.playerName", action != null && action.entityType != null && action.entityType.startsWith("player::") ? action.entityType.substring("player::".length()) : ""));
@@ -82,13 +76,13 @@ public class WindowEditAction extends Window
         super.draw(mouseX, mouseY);
         if(!minimized)
         {
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.newAction.name"), posX + 11, posY + 20, Theme.getAsHex(workspace.currentTheme.font), false);
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.newAction.entityType"), posX + 11, posY + 55, Theme.getAsHex(workspace.currentTheme.font), false);
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.newAction.preCreate"), posX + 23, posY + 90, Theme.getAsHex(workspace.currentTheme.font), false);
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.newAction.persist"), posX + 23, posY + 110, Theme.getAsHex(workspace.currentTheme.font), false);
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.newAction.playerName"), posX + 11, posY + 125, Theme.getAsHex(workspace.currentTheme.font), false);
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.editAction.actionPos"), posX + 11, posY + 160, Theme.getAsHex(workspace.currentTheme.font), false);
-            workspace.getFontRenderer().drawString(I18n.translateToLocal("window.editAction.actionOffset"), posX + 11, posY + 195, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.newAction.name"), posX + 11, posY + 20, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.newAction.entityType"), posX + 11, posY + 55, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.newAction.preCreate"), posX + 23, posY + 90, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.newAction.persist"), posX + 23, posY + 110, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.newAction.playerName"), posX + 11, posY + 125, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.editAction.actionPos"), posX + 11, posY + 160, Theme.getAsHex(workspace.currentTheme.font), false);
+            workspace.getFontRenderer().drawString(I18n.format("window.editAction.actionOffset"), posX + 11, posY + 195, Theme.getAsHex(workspace.currentTheme.font), false);
         }
     }
 
@@ -99,87 +93,71 @@ public class WindowEditAction extends Window
         {
             workspace.removeWindow(this, true);
         }
-        if(element.id > 0 && element.id != 3 && element.id != 4)
-        {
-            String actName = "";
-            String playerName = "";
-            String clzName = "";
-            boolean create = false;
-            boolean persist = false;
-            boolean isPlayer = false;
-            int pos = 0;
-            int[] startPos = new int[3];
+        if(element.id <= 0 || element.id == 3 || element.id == 4) return;
 
-            for(int i = 0; i < elements.size(); i++)
+        String actName = "";
+        String playerName = "";
+        String clzName = "";
+        boolean create = false;
+        boolean persist = false;
+        boolean isPlayer = false;
+        int pos = 0;
+        int[] startPos = new int[3];
+
+        for (Element e : elements) {
+            if (e instanceof ElementTextInput)
             {
-                Element e = elements.get(i);
-                if(e instanceof ElementTextInput)
-                {
-                    ElementTextInput text = (ElementTextInput)e;
-                    if(text.id == 1)
-                    {
-                        actName = text.textField.getText();
-                    }
-                    else if(text.id == 2)
-                    {
-                        playerName = text.textField.getText();
-                    }
+                ElementTextInput text = (ElementTextInput) e;
+                if (text.id == 1) {
+                    actName = text.textField.getText();
+                } else if (text.id == 2) {
+                    playerName = text.textField.getText();
                 }
-                else if(e instanceof ElementCheckBox)
-                {
-                    if(e.id == -1)
-                    {
-                        create = ((ElementCheckBox)e).toggledState;
-                    }
-                    else if(e.id == -2)
-                    {
-                        persist = ((ElementCheckBox)e).toggledState;
-                    }
+            }
+            else if (e instanceof ElementCheckBox)
+            {
+                if (e.id == -1) {
+                    create = ((ElementCheckBox) e).toggledState;
+                } else if (e.id == -2) {
+                    persist = ((ElementCheckBox) e).toggledState;
                 }
-                else if(e instanceof ElementSelector)
-                {
-                    ElementSelector selector = (ElementSelector)e;
-                    Object obj = selector.choices.get(selector.selected);
-                    if(obj != null)
-                    {
-                        clzName = ((Class)obj).getName();
-                        if(EntityPlayer.class.isAssignableFrom((Class)obj))
-                        {
-                            isPlayer = true;
-                            if(playerName.isEmpty())
-                            {
-                                playerName = Minecraft.getMinecraft().player.getName();
-                            }
+            }
+            else if (e instanceof ElementSelector)
+            {
+                ElementSelector selector = (ElementSelector) e;
+                Object obj = selector.choices.get(selector.selected);
+                if (obj != null) {
+                    clzName = ((Class) obj).getName();
+                    if (EntityPlayer.class.isAssignableFrom((Class) obj)) {
+                        isPlayer = true;
+                        if (playerName.isEmpty()) {
+                            playerName = Minecraft.getMinecraft().player.getName();
                         }
                     }
                 }
-                else if(e instanceof ElementNumberInput)
-                {
-                    ElementNumberInput nums = (ElementNumberInput)elements.get(i);
-
-                    if(e.id == 4)
-                    {
-                        pos = Integer.parseInt(nums.textFields.get(0).getText());
-                    }
-                    else if(e.id == -1)
-                    {
-                        startPos = new int[] { (int)Math.round(Double.parseDouble(nums.textFields.get(0).getText()) * Scene.PRECISION), (int)Math.round(Double.parseDouble(nums.textFields.get(1).getText()) * Scene.PRECISION), (int)Math.round(Double.parseDouble(nums.textFields.get(2).getText()) * Scene.PRECISION) };
-                    }
+            }
+            else if (e instanceof ElementNumberInput)
+            {
+                ElementNumberInput nums = (ElementNumberInput) e;
+                if (e.id == 4) {
+                    pos = Integer.parseInt(nums.textFields.get(0).getText());
+                } else if (e.id == -1) {
+                    startPos = new int[]{(int) Math.round(Double.parseDouble(nums.textFields.get(0).getText()) * Scene.PRECISION), (int) Math.round(Double.parseDouble(nums.textFields.get(1).getText()) * Scene.PRECISION), (int) Math.round(Double.parseDouble(nums.textFields.get(2).getText()) * Scene.PRECISION)};
                 }
             }
-            GuiWorkspace parent = (GuiWorkspace)workspace;
-            Scene scene = parent.getOpenScene();
-            if(actName.isEmpty())
-            {
-                actName = "NewAction" + (scene.actions.size() + 1);
-            }
-            if(action != null)
-            {
-                action.update(actName, !isPlayer ? clzName : "player::" + playerName, pos, null, create, persist);
-                action.offsetPos = startPos;
-            }
-            Collections.sort(scene.actions);
-            workspace.removeWindow(this, true);
         }
+        GuiWorkspace parent = (GuiWorkspace)workspace;
+        Scene scene = parent.getOpenScene();
+        if(actName.isEmpty())
+        {
+            actName = "NewAction" + (scene.actions.size() + 1);
+        }
+        if(action != null)
+        {
+            action.update(actName, !isPlayer ? clzName : "player::" + playerName, pos, null, create, persist);
+            action.offsetPos = startPos;
+        }
+        Collections.sort(scene.actions);
+        workspace.removeWindow(this, true);
     }
 }
