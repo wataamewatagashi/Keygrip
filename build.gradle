@@ -38,6 +38,17 @@ repositories {
     mavenCentral()
 }
 
+dependencies {
+    compileOnly files('libs/iChunUtil-1.12.2-7.2.2-deobf.jar')
+}
+
+//This code to load textures in runClient. If you want to only build, don't touch this.
+//sourceSets {
+//    main {
+//        output.resourcesDir = output.classesDir
+//    }
+//}
+
 processResources
 {
     // this will ensure that this task is redone when the versions change.
