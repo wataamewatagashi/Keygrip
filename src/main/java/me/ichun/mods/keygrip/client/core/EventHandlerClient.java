@@ -91,24 +91,21 @@ public class EventHandlerClient
                 {
                     Keygrip.eventHandlerClient.workspace.getOpenScene().stop();
                     Keygrip.channel.sendToServer(new PacketStopScene(Keygrip.eventHandlerClient.workspace.getOpenScene().identifier));
-                }
-                else
-                    {
-                        if(Keygrip.eventHandlerClient.workspace.sceneSendingCooldown <= 0)
-                        {
-                            if(Keygrip.eventHandlerClient.workspace.timeline.timeline.getCurrentPos() > Keygrip.eventHandlerClient.workspace.getOpenScene().getLength())
-                            {
-                                Keygrip.eventHandlerClient.workspace.timeline.timeline.setCurrentPos(0);
-                            }
-                            if(GuiScreen.isCtrlKeyDown())
-                            {
-                                Minecraft.getMinecraft().displayGuiScreen(null);
-                                Minecraft.getMinecraft().setIngameFocus();
-                            }
-                            Scene.sendSceneToServer(Keygrip.eventHandlerClient.workspace.getOpenScene());
-                        }
-                        Keygrip.eventHandlerClient.workspace.sceneSendingCooldown = 10;
+                    if (Keygrip.eventHandlerClient.actionToRecord != null) {
+                        Keygrip.eventHandlerClient.workspace.toggleRecording();
                     }
+                } else {
+                    if(Keygrip.eventHandlerClient.workspace.sceneSendingCooldown <= 0) {
+                        Keygrip.eventHandlerClient.workspace.timeline.timeline.setCurrentPos(0);
+                        if(GuiScreen.isCtrlKeyDown())
+                        {
+                            Minecraft.getMinecraft().displayGuiScreen(null);
+                            Minecraft.getMinecraft().setIngameFocus();
+                        }
+                        Scene.sendSceneToServer(Keygrip.eventHandlerClient.workspace.getOpenScene());
+                    }
+                    Keygrip.eventHandlerClient.workspace.sceneSendingCooldown = 10;
+                }
             }
         }
     }
@@ -131,7 +128,7 @@ public class EventHandlerClient
                 {
                     if(sceneFrom.playTime < actionToRecord.startKey + startRecordTime)
                     {
-                        mc.fontRenderer.drawString(Integer.toString((int)(Math.ceil((actionToRecord.startKey - sceneFrom.playTime) / 20D))), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
+                        mc.fontRenderer.drawString(Integer.toString((int)(Math.ceil((actionToRecord.startKey + startRecordTime - sceneFrom.playTime) / 20D))), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
                     }
                     else
                     {
@@ -198,9 +195,7 @@ public class EventHandlerClient
                             CompressedStreamTools.writeCompressed(nbt, baos);
                             tag = baos.toByteArray();
                         }
-                        catch(IOException ignored)
-                        {
-                        }
+                        catch(IOException ignored) {}
                         if(tag != null)
                         {
                             actions.add(new ActionComponent(0, 7, tag));

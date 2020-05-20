@@ -85,10 +85,7 @@ public class WindowTimeline extends Window
             {
                 if(parent.hasOpenScene() && parent.sceneSendingCooldown <= 0)
                 {
-                    if(parent.timeline.timeline.getCurrentPos() > parent.getOpenScene().getLength())
-                    {
-                        parent.timeline.timeline.setCurrentPos(0);
-                    }
+                    parent.timeline.timeline.setCurrentPos(0);
                     if(GuiScreen.isCtrlKeyDown())
                     {
                         Minecraft.getMinecraft().displayGuiScreen(null);

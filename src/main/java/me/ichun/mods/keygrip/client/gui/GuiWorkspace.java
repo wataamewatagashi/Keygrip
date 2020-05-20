@@ -29,6 +29,7 @@ import me.ichun.mods.ichunutil.client.gui.window.element.ElementButton;
 import me.ichun.mods.ichunutil.client.gui.window.element.ElementMinimize;
 import me.ichun.mods.ichunutil.client.render.RendererHelper;
 import me.ichun.mods.ichunutil.common.core.util.IOUtil;
+import me.ichun.mods.keygrip.client.core.EventHandlerClient;
 import me.ichun.mods.keygrip.client.gui.window.WindowSaveAs;
 import me.ichun.mods.keygrip.client.gui.window.WindowSceneSelection;
 import me.ichun.mods.keygrip.client.gui.window.WindowTimeline;
@@ -141,16 +142,25 @@ public class GuiWorkspace extends IWorkspace
 
         drawWindows(mouseX, mouseY);
 
-        if(Keygrip.eventHandlerClient.actionToRecord != null)
+        EventHandlerClient eventHandler = Keygrip.eventHandlerClient;
+
+        if(eventHandler.actionToRecord != null)
         {
             int pX = 5;
             int pY = 35;
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            RendererHelper.drawTextureOnScreen(Keygrip.eventHandlerClient.txRec, pX, pY, 20, 20, 100);
+            RendererHelper.drawTextureOnScreen(eventHandler.txRec, pX, pY, 20, 20, 100);
             GlStateManager.pushMatrix();
             float scale = 2.0F;
             GlStateManager.scale(scale, scale, scale);
-            mc.fontRenderer.drawString(I18n.format("window.recording"), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
+            if(eventHandler.sceneFrom.playTime < eventHandler.actionToRecord.startKey + eventHandler.startRecordTime)
+            {
+                mc.fontRenderer.drawString(Integer.toString((int)(Math.ceil(((eventHandler.actionToRecord.startKey + eventHandler.startRecordTime) - eventHandler.sceneFrom.playTime) / 20D))), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
+            }
+            else
+            {
+                mc.fontRenderer.drawString(I18n.format("window.recording"), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
+            }
             GlStateManager.popMatrix();
         }
 
@@ -292,6 +302,7 @@ public class GuiWorkspace extends IWorkspace
         }
         else {
             boolean started = false;
+            scene.playTime = 0;
             for(Action a : scene.actions)
             {
                 if(!a.identifier.equals(timeline.timeline.selectedIdentifier)) continue;
@@ -329,36 +340,29 @@ public class GuiWorkspace extends IWorkspace
                     if(tag.isEmpty())
                     {
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        try
-                        {
+                        try {
                             CompressedStreamTools.writeCompressed(tag, baos);
                             a.nbtToRead = baos.toByteArray();
                         }
-                        catch(IOException ignored)
-                        {
+                        catch(IOException ignored) {}
+                    }
+                } else {
+                    LimbComponent lastLook = null;
+                    LimbComponent lastPos = null;
+                    int lastLookInt = -1;
+                    for(Map.Entry<Integer, LimbComponent> e : a.lookComponents.entrySet()) {
+                        if(e.getKey() > lastLookInt && e.getKey() < Keygrip.eventHandlerClient.recordActionFrom) {
+                            lastLookInt = e.getKey();
+                            lastLook = e.getValue();
                         }
                     }
-                }
-                else
+                    int lastPosInt = -1;
+                    for(Map.Entry<Integer, LimbComponent> e : a.posComponents.entrySet())
                     {
-                        LimbComponent lastLook = null;
-                        LimbComponent lastPos = null;
-                        int lastLookInt = -1;
-                        for(Map.Entry<Integer, LimbComponent> e : a.lookComponents.entrySet())
+                        if(e.getKey() > lastPosInt && e.getKey() < Keygrip.eventHandlerClient.recordActionFrom)
                         {
-                            if(e.getKey() > lastLookInt && e.getKey() < Keygrip.eventHandlerClient.recordActionFrom)
-                            {
-                                lastLookInt = e.getKey();
-                                lastLook = e.getValue();
-                            }
-                        }
-                        int lastPosInt = -1;
-                        for(Map.Entry<Integer, LimbComponent> e : a.posComponents.entrySet())
-                        {
-                            if(e.getKey() > lastPosInt && e.getKey() < Keygrip.eventHandlerClient.recordActionFrom)
-                            {
-                                lastPosInt = e.getKey();
-                                lastPos = e.getValue();
+                            lastPosInt = e.getKey();
+                            lastPos = e.getValue();
                             }
                         }
                         Minecraft mc = Minecraft.getMinecraft();
