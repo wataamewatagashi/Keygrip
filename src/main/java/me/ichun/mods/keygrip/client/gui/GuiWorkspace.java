@@ -1,14 +1,20 @@
 package me.ichun.mods.keygrip.client.gui;
 
+import com.google.common.collect.Ordering;
 import com.google.gson.Gson;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fml.common.registry.EntityEntry;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.lwjgl.input.Keyboard;
@@ -20,6 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
+import java.util.TreeMap;
 
 import me.ichun.mods.ichunutil.client.gui.window.IWorkspace;
 import me.ichun.mods.ichunutil.client.gui.window.Window;
@@ -62,6 +69,9 @@ public class GuiWorkspace extends IWorkspace
 
     public Action actionToCopy;
 
+    public Map<String, Class<? extends Entity>> containsEntity = new TreeMap<>(Ordering.natural());
+    public Class<? extends Entity> selectedEntity = EntityPlayer.class;
+
     public GuiWorkspace(int scale)
     {
         levels = new ArrayList<ArrayList<Window>>()
@@ -77,6 +87,15 @@ public class GuiWorkspace extends IWorkspace
         levels.get(3).add(new WindowTopDock(this, width, 20));
         sceneManager = new WindowSceneSelection(this, width, 20);
         levels.get(3).add(sceneManager);
+
+        for (EntityEntry o : net.minecraftforge.registries.GameData.getEntityRegistry())
+        {
+            Class<? extends Entity> clz = o.getEntityClass();
+            if(EntityLivingBase.class.isAssignableFrom(clz) && Minecraft.getMinecraft().getRenderManager().getEntityClassRenderObject(clz) instanceof RenderLivingBase)
+            {
+                containsEntity.put(clz.getSimpleName(), clz);
+            }
+        }
     }
 
     @Override
