@@ -16,9 +16,9 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 // Requires iChunUtil to run. Just put iChunUtil-deobf.jar in the /libs/ folder or it won't compile.
-version = "1.12.2-0.1SNAPSHOT"
-group= "keygrip"
-archivesBaseName = "Keygrip"
+version = "1.12.2-0.1"
+group= "keygripreloaded"
+archivesBaseName = "KeygripReloaded"
 
 minecraft {
     version = "1.12.2-14.23.5.2781"
