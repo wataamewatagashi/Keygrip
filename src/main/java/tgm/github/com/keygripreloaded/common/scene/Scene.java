@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import me.ichun.mods.ichunutil.client.gui.window.WindowPopup;
 import me.ichun.mods.ichunutil.common.core.util.IOUtil;
@@ -131,14 +133,21 @@ public class Scene
 
             a.state.ent.setLocationAndAngles((startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION, a.rotation[0] / (float)PRECISION, a.rotation[1] / (float)PRECISION);
             world.spawnEntity(a.state.ent);
-            if(a.state.ent instanceof EntityPlayer)
-                {
-                    world.playerEntities.remove(a.state.ent);
-                    world.updateAllPlayersSleepingFlag();
-                }
+            if(a.state.ent instanceof EntityPlayer) {
+                world.playerEntities.remove(a.state.ent);
+                world.updateAllPlayersSleepingFlag();
+            }
+
+            IntStream.range(0, a.state.inventory.length)
+                    .filter(i -> a.state.inventory[i] != null)
+                    .boxed()
+                    .collect(Collectors.toMap(i -> i+1, i -> a.state.inventory[i]))
+                    .forEach((i, itemStack) -> a.state.ent.setItemStackToSlot(Action.convertSlotNumToEnum(i), itemStack));
+
             LimbComponent lastLook = null;
             LimbComponent lastPos = null;
             int lastLookInt = -1;
+
 
             for(Map.Entry<Integer, LimbComponent> e : a.lookComponents.entrySet()) {
                 if(e.getKey() < lastLookInt || e.getKey() > playTime) continue;

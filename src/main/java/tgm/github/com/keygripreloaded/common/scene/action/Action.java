@@ -377,7 +377,7 @@ public class Action implements Comparable<Action>
      * @param slot slot number (0 = mainHand, 1 = boots, 2 = legs, 3 = chest, 4 = head, 5 = offHand)
      * @return EntityEquipmentSlot class
      */
-    private static EntityEquipmentSlot convertSlotNumToEnum(int slot) {
+    public static EntityEquipmentSlot convertSlotNumToEnum(int slot) {
         switch (slot) {
             case 1: return EntityEquipmentSlot.MAINHAND;
             case 2: return EntityEquipmentSlot.FEET;
