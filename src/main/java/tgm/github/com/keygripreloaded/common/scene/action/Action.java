@@ -319,7 +319,7 @@ public class Action implements Comparable<Action>
                 this.state.ent.setSprinting(playerDummy.isSprinting());
                 this.state.ent.setSneaking(playerDummy.isSneaking());
                 Arrays.stream(EntityEquipmentSlot.values()).forEach(e -> this.state.ent.setItemStackToSlot(e, state.ent.getItemStackFromSlot(e)));
-                }
+            }
             if(state.ent instanceof EntityLiving) {
                 ((EntityLiving)state.ent).setNoAI(true);
                 ((EntityLiving)state.ent).tasks.taskEntries.clear();

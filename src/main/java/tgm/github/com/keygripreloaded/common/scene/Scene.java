@@ -169,7 +169,7 @@ public class Scene
             }
             if(lastPos != null)
             {
-                a.state.ent.setLocationAndAngles((lastPos.actionChange[0] + (a.offsetPos[0] + startPos[0])) / (double)PRECISION, (lastPos.actionChange[1] + (a.offsetPos[1] + startPos[1])) / (double)PRECISION, (lastPos.actionChange[2] + (a.offsetPos[2] + startPos[2])) / (double)PRECISION, a.state.ent.rotationYaw, a.state.ent.rotationPitch);
+                a.state.ent.setPositionAndRotation((lastPos.actionChange[0] + (a.offsetPos[0] + startPos[0])) / (double)PRECISION, (lastPos.actionChange[1] + (a.offsetPos[1] + startPos[1])) / (double)PRECISION, (lastPos.actionChange[2] + (a.offsetPos[2] + startPos[2])) / (double)PRECISION, a.state.ent.rotationYaw, a.state.ent.rotationPitch);
             }
         });
     }
