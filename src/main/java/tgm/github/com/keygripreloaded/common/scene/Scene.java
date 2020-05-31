@@ -86,7 +86,7 @@ public class Scene
                         if(a.state.ent == null) {
                             KeygripReloaded.LOGGER.warn("Error initializing action: " + a.name);
                         } else {
-                            a.state.ent.setLocationAndAngles((startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION, a.rotation[0] / (float)PRECISION, a.rotation[1] / (float)PRECISION);
+                            a.state.ent.setPositionAndRotation((startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION, a.rotation[0] / (float)PRECISION, a.rotation[1] / (float)PRECISION);
                             a.state.ent.setUniqueId(UUID.randomUUID());
                             server.spawnEntity(a.state.ent);
                             if(a.state.ent instanceof EntityPlayer) {
@@ -118,7 +118,7 @@ public class Scene
         server = world;
         actions.forEach(a -> {
             if(playTime > a.startKey + a.getLength() && a.persistEntity != 1 || a.hidden == 1) return;
-            if(playTime < a.startKey && a.precreateEntity != 1) return;
+            if(playTime >= a.startKey || a.precreateEntity != 1) return;
             //create the related entity
             if(!a.createState(world, (startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION)) {
                 return;
@@ -131,7 +131,7 @@ public class Scene
 
             a.state.ent.setUniqueId(UUID.randomUUID());
 
-            a.state.ent.setLocationAndAngles((startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION, a.rotation[0] / (float)PRECISION, a.rotation[1] / (float)PRECISION);
+            a.state.ent.setPositionAndRotation((startPos[0] + a.offsetPos[0]) / (double)PRECISION, (startPos[1] + a.offsetPos[1]) / (double)PRECISION, (startPos[2] + a.offsetPos[2]) / (double)PRECISION, a.rotation[0] / (float)PRECISION, a.rotation[1] / (float)PRECISION);
             world.spawnEntity(a.state.ent);
             if(a.state.ent instanceof EntityPlayer) {
                 world.playerEntities.remove(a.state.ent);
@@ -149,7 +149,7 @@ public class Scene
             int lastLookInt = -1;
 
             for(Map.Entry<Integer, LimbComponent> e : a.lookComponents.entrySet()) {
-                if(e.getKey() < lastLookInt || e.getKey() > playTime) continue;
+                if(e.getKey() <= lastLookInt || e.getKey() >= playTime) continue;
 
                 lastLookInt = e.getKey();
                 lastLook = e.getValue();
@@ -157,7 +157,7 @@ public class Scene
             int lastPosInt = -1;
             for(Map.Entry<Integer, LimbComponent> e : a.posComponents.entrySet())
             {
-                if(e.getKey() < lastPosInt || e.getKey() > playTime) continue;
+                if(e.getKey() <= lastPosInt || e.getKey() >= playTime) continue;
 
                 lastPosInt = e.getKey();
                 lastPos = e.getValue();
@@ -192,7 +192,8 @@ public class Scene
 
     public void destroy()
     {
-        actions.stream().filter(action -> action.state != null && action.state.ent != null)
+        actions.stream()
+                .filter(action -> action.state != null && action.state.ent != null)
                 .forEach(action -> {
                     action.state.ent.setDead();
                     action.state.additionalEnts.forEach(Entity::setDead);

@@ -369,7 +369,7 @@ public class GuiWorkspace extends IWorkspace
                             lastPos = new LimbComponent(0, 0, 0);
                         }
                         mc.player.setLocationAndAngles((lastPos.actionChange[0] + (a.offsetPos[0] + scene.startPos[0])) / (double)Scene.PRECISION, (lastPos.actionChange[1] + (a.offsetPos[1] + scene.startPos[1])) / (double)Scene.PRECISION, (lastPos.actionChange[2] + (a.offsetPos[2] + scene.startPos[2])) / (double)Scene.PRECISION, (float) lastLook.actionChange[0] / Scene.PRECISION, (float) lastLook.actionChange[1] / Scene.PRECISION);
-                    }
+                }
                 KeygripReloaded.eventHandlerClient.prevState = new EntityState(Minecraft.getMinecraft().player);
                 KeygripReloaded.eventHandlerClient.nextState = new EntityState(Minecraft.getMinecraft().player);
                 KeygripReloaded.eventHandlerClient.dimension = Minecraft.getMinecraft().world.provider.getDimension();
