@@ -113,17 +113,13 @@ public class WindowEditAction extends Window
                 } else if (text.id == 2) {
                     playerName = text.textField.getText();
                 }
-            }
-            else if (e instanceof ElementCheckBox)
-            {
+            } else if (e instanceof ElementCheckBox) {
                 if (e.id == -1) {
                     create = ((ElementCheckBox) e).toggledState;
                 } else if (e.id == -2) {
                     persist = ((ElementCheckBox) e).toggledState;
                 }
-            }
-            else if (e instanceof ElementSelector)
-            {
+            } else if (e instanceof ElementSelector) {
                 ElementSelector selector = (ElementSelector) e;
                 Object obj = selector.choices.get(selector.selected);
                 if (obj != null) {
@@ -135,9 +131,7 @@ public class WindowEditAction extends Window
                         }
                     }
                 }
-            }
-            else if (e instanceof ElementNumberInput)
-            {
+            } else if (e instanceof ElementNumberInput) {
                 ElementNumberInput nums = (ElementNumberInput) e;
                 if (e.id == 4) {
                     pos = Integer.parseInt(nums.textFields.get(0).getText());

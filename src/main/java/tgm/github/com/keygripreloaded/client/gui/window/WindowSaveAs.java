@@ -92,8 +92,7 @@ public class WindowSaveAs extends Window
         if(file.exists())
         {
             workspace.addWindowOnTop(new WindowOverwrite(workspace, this, scene, file).putInMiddleOfScreen());
-        }
-        else {
+        } else {
             if(Scene.saveScene(scene, file))
             {
                 scene.saveFile = file;
@@ -105,8 +104,7 @@ public class WindowSaveAs extends Window
                 {
                     ((GuiWorkspace)workspace).sceneManager.removeScene(scene.identifier);
                 }
-            }
-            else {
+            } else {
                 workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.saveAs.failed").putInMiddleOfScreen());
             }
         }

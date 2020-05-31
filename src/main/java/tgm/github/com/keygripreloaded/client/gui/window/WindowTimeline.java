@@ -55,60 +55,47 @@ public class WindowTimeline extends Window
         if(element.id == ID_NEW_ACTION)
         {
             workspace.addWindowOnTop(new WindowNewAction(workspace, workspace.width / 2 - 100, workspace.height / 2 - 80, 200, 220, 200, 220).putInMiddleOfScreen());
-        }
-        else if(element.id == ID_EDIT_ACTION && !parent.timeline.timeline.selectedIdentifier.isEmpty())
+        } else if(element.id == ID_EDIT_ACTION && !parent.timeline.timeline.selectedIdentifier.isEmpty())
         {
             workspace.addWindowOnTop(new WindowEditAction(workspace, workspace.width / 2 - 100, workspace.height / 2 - 80, 200, 260, 200, 260).putInMiddleOfScreen());
+        } else if(element.id == ID_DEL_ACTION && !parent.timeline.timeline.selectedIdentifier.isEmpty()) {
+            Scene scene = parent.getOpenScene();
+            for(int i = scene.actions.size() - 1; i >= 0; i--)
+            {
+                Action act = scene.actions.get(i);
+                if(!act.identifier.equals(parent.timeline.timeline.selectedIdentifier)) continue;
+                scene.actions.remove(i);
+                parent.timeline.timeline.selectedIdentifier = "";
+                Collections.sort(scene.actions);
+                break;
+            }
+        } else if(element.id == ID_REC_ACTION) {
+            if(parent.timeline.timeline.selectedIdentifier.isEmpty())
+            {
+                workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.recAction.noAction").putInMiddleOfScreen());
+            }
+            parent.toggleRecording();
+        } else if(element.id == ID_PLAY_SCENE) {
+            if(parent.hasOpenScene() && parent.sceneSendingCooldown <= 0)
+            {
+                parent.timeline.timeline.setCurrentPos(0);
+                if(GuiScreen.isCtrlKeyDown())
+                {
+                    Minecraft.getMinecraft().displayGuiScreen(null);
+                    Minecraft.getMinecraft().setIngameFocus();
+                }
+                Scene.sendSceneToServer(parent.getOpenScene());
+            }
+            parent.sceneSendingCooldown = 10;
+        } else if(element.id == ID_STOP_SCENE) {
+            if(KeygripReloaded.eventHandlerClient.actionToRecord != null)
+            {
+                parent.toggleRecording(); //Lets stop recording in case the end user doesn't know it's a record toggle button.
+            } else if(parent.hasOpenScene()) {
+                parent.getOpenScene().stop();
+                KeygripReloaded.channel.sendToServer(new PacketStopScene(parent.getOpenScene().identifier));
+            }
         }
-        else if(element.id == ID_DEL_ACTION && !parent.timeline.timeline.selectedIdentifier.isEmpty())
-            {
-                Scene scene = parent.getOpenScene();
-                for(int i = scene.actions.size() - 1; i >= 0; i--)
-                {
-                    Action act = scene.actions.get(i);
-                    if(!act.identifier.equals(parent.timeline.timeline.selectedIdentifier)) continue;
-                    scene.actions.remove(i);
-                    parent.timeline.timeline.selectedIdentifier = "";
-                    Collections.sort(scene.actions);
-                    break;
-                }
-            }
-            else if(element.id == ID_REC_ACTION)
-            {
-                if(parent.timeline.timeline.selectedIdentifier.isEmpty())
-                {
-                    workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.recAction.noAction").putInMiddleOfScreen());
-                }
-                parent.toggleRecording();
-            }
-            else if(element.id == ID_PLAY_SCENE)
-            {
-                if(parent.hasOpenScene() && parent.sceneSendingCooldown <= 0)
-                {
-                    parent.timeline.timeline.setCurrentPos(0);
-                    if(GuiScreen.isCtrlKeyDown())
-                    {
-                        Minecraft.getMinecraft().displayGuiScreen(null);
-                        Minecraft.getMinecraft().setIngameFocus();
-                    }
-                    Scene.sendSceneToServer(parent.getOpenScene());
-                }
-                parent.sceneSendingCooldown = 10;
-            }
-            else if(element.id == ID_STOP_SCENE)
-            {
-                if(KeygripReloaded.eventHandlerClient.actionToRecord != null)
-                {
-                    parent.toggleRecording(); //Lets stop recording in case the end user doesn't know it's a record toggle button.
-                }
-                else if(parent.hasOpenScene())
-                {
-                    parent.getOpenScene().stop();
-
-                    KeygripReloaded.channel.sendToServer(new PacketStopScene(parent.getOpenScene().identifier));
-                }
-            }
-
     }
 
     @Override

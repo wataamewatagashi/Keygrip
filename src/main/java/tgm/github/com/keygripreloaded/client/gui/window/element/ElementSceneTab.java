@@ -35,9 +35,7 @@ public class ElementSceneTab extends Element
         if(proj.selectedScene == id)
         {
             RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementProjectTabActive[0], parent.workspace.currentTheme.elementProjectTabActive[1], parent.workspace.currentTheme.elementProjectTabActive[2], 255, getPosX(), getPosY(), width - 1, height, 0);
-        }
-        else if(hover)
-        {
+        } else if(hover) {
             RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementProjectTabHover[0], parent.workspace.currentTheme.elementProjectTabHover[1], parent.workspace.currentTheme.elementProjectTabHover[2], 255, getPosX(), getPosY(), width - 1, height, 0);
         }
 
@@ -48,9 +46,7 @@ public class ElementSceneTab extends Element
             if(titleToRender.endsWith("... "))
             {
                 titleToRender = titleToRender.substring(0, titleToRender.length() - 5) + "... ";
-            }
-            else
-            {
+            } else {
                 titleToRender = titleToRender.substring(0, titleToRender.length() - 1) + "... ";
             }
         }
@@ -71,9 +67,7 @@ public class ElementSceneTab extends Element
             posX = (id * (space / tab.scenes.size()));
             posY = 0;
             width = space / tab.scenes.size();
-        }
-        else
-        {
+        } else {
             posX = 0;
             for(int i = 0; i < id; i++)
             {
@@ -112,8 +106,7 @@ public class ElementSceneTab extends Element
         }
         if(scene.saveFile == null || scene.saveFileMd5 == null || !scene.saveFileMd5.equals(md5)) {
             parent.workspace.addWindowOnTop(new WindowSaveBeforeClosing(parent.workspace, scene).putInMiddleOfScreen());
-        }
-        else {
+        } else {
             ((WindowSceneSelection)parent).removeScene(scene.identifier);
         }
         return false;

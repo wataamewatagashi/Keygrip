@@ -43,18 +43,14 @@ public class WindowSceneSelection extends WindowTopDock
         if(!workspace.levels.get(0).isEmpty())
         {
             posX = workspace.levels.get(0).get(0).width - 2;
-        }
-        else
-        {
+        } else {
             posX = 0;
         }
         posY = workspace.TOP_DOCK_HEIGHT + 1;
         if(!workspace.levels.get(1).isEmpty())
         {
             width = workspace.width - posX - workspace.levels.get(1).get(0).width + 2;
-        }
-        else
-        {
+        } else {
             width = workspace.width - posX;
         }
         height = 12;

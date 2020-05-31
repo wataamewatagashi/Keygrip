@@ -156,9 +156,7 @@ public class GuiWorkspace extends IWorkspace
             if(eventHandler.sceneFrom.playTime < eventHandler.actionToRecord.startKey + eventHandler.startRecordTime)
             {
                 mc.fontRenderer.drawString(Integer.toString((int)(Math.ceil(((eventHandler.actionToRecord.startKey + eventHandler.startRecordTime) - eventHandler.sceneFrom.playTime) / 20D))), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
-            }
-            else
-            {
+            } else {
                 mc.fontRenderer.drawString(I18n.format("window.recording"), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
             }
             GlStateManager.popMatrix();
@@ -261,9 +259,7 @@ public class GuiWorkspace extends IWorkspace
             {
                 this.mc.setIngameFocus();
             }
-        }
-        else if(elementSelected != null)
-        {
+        } else if(elementSelected != null) {
             elementSelected.keyInput(c, key);
         }
     }
@@ -299,8 +295,7 @@ public class GuiWorkspace extends IWorkspace
             KeygripReloaded.eventHandlerClient.recordActionFrom = 0;
             KeygripReloaded.eventHandlerClient.startRecordTime = 0;
             KeygripReloaded.eventHandlerClient.startRecord = false;
-        }
-        else {
+        } else {
             boolean started = false;
             scene.playTime = 0;
             for(Action a : scene.actions)
@@ -315,8 +310,7 @@ public class GuiWorkspace extends IWorkspace
                 if(KeygripReloaded.config.playbackSceneWhileRecording != 1 || scene.actions.size() == 1 || a.startKey > scene.getLength())
                 {
                     KeygripReloaded.eventHandlerClient.startRecord = true;
-                }
-                else {
+                } else {
                     if(this.sceneSendingCooldown <= 0)
                     {
                         if(this.timeline.timeline.getCurrentPos() > scene.getLength())
@@ -412,8 +406,7 @@ public class GuiWorkspace extends IWorkspace
                     {
                         sceneManager.removeScene(scene.identifier);
                     }
-                }
-                else {
+                } else {
                     error = true;
                 }
             }

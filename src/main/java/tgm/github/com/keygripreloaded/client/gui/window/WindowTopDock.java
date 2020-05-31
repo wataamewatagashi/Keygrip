@@ -38,31 +38,21 @@ public class WindowTopDock extends WindowTopDockBase
         if(element.id == ID_NEW)
         {
             workspace.addWindowOnTop(new WindowNewScene(workspace, 0, 0, 200, 100, 200, 100).putInMiddleOfScreen());
-        }
-        else if(element.id == ID_EDIT)
-        {
+        } else if(element.id == ID_EDIT) {
             if(parent.hasOpenScene())
             {
                 workspace.addWindowOnTop(new WindowEditScene(workspace, 0, 0, 200, 120, 200, 120).putInMiddleOfScreen());
             }
-        }
-        else if(element.id == ID_OPEN)
-        {
+        } else if(element.id == ID_OPEN) {
             workspace.addWindowOnTop(new WindowOpenScene(workspace, 0, 0, 260, 230, 240, 160).putInMiddleOfScreen());
-        }
-        else if(element.id == ID_SAVE)
-        {
+        } else if(element.id == ID_SAVE) {
             parent.save(false);
-        }
-        else if(element.id == ID_SAVE_AS)
-        {
+        } else if(element.id == ID_SAVE_AS) {
             if(parent.hasOpenScene())
             {
                 workspace.addWindowOnTop(new WindowSaveAs(workspace, 0, 0, 200, 100, 200, 100, false).putInMiddleOfScreen());
             }
-        }
-        else if(element.id == ID_IMPORT_ACTION)
-        {
+        } else if(element.id == ID_IMPORT_ACTION) {
             if(parent.hasOpenScene())
             {
                 workspace.addWindowOnTop(new WindowImportAction(workspace, 0, 0, 260, 220, 240, 160).putInMiddleOfScreen());

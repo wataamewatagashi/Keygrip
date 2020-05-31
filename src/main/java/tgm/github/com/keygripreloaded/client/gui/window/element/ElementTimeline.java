@@ -142,9 +142,7 @@ public class ElementTimeline extends Element
                 sbx2 -= 10;
                 sliderProgHori = 1.0F - MathHelper.clamp((double)(sbx2 - mouseX) / (double)(sbx2 - sbx1), 0.0D, 1.0D);
             }
-        }
-        else
-        {
+        } else {
             sliderProgHori = 0.0D;
         }
 
@@ -164,9 +162,7 @@ public class ElementTimeline extends Element
                 GlStateManager.scale(scale, scale, scale);
                 parent.workspace.getFontRenderer().drawString(Integer.toString(tick), (int)((getPosX() + buttonsWidth + 2 + timeOffX) / scale), (int)((getPosY() + height - 16) / scale), Theme.getAsHex(tick == currentPos ? parent.workspace.currentTheme.font : parent.workspace.currentTheme.fontDim), false);
                 GlStateManager.popMatrix();
-            }
-            else
-            {
+            } else {
                 RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeScrollBarBorder[0], parent.workspace.currentTheme.elementTreeScrollBarBorder[1], parent.workspace.currentTheme.elementTreeScrollBarBorder[2], 255, getPosX() + buttonsWidth - 1 + timeOffX, getPosY() + height - 19, 2, 2, 0);
             }
             tick++;
@@ -199,8 +195,7 @@ public class ElementTimeline extends Element
                 {
                     lineClr = parent.workspace.currentTheme.elementTreeItemBgSelect;
                 }
-                else if(idClicked == idHovered)
-                {
+                else if(idClicked == idHovered) {
                     lineClr = parent.workspace.currentTheme.elementTreeItemBgHover;
                 }
 
@@ -231,9 +226,7 @@ public class ElementTimeline extends Element
                 {
                     GlStateManager.translate(tickWidth + ((GuiWorkspace)parent.workspace).renderTick, 0F, 0F);
                 }
-            }
-            else
-            {
+            } else {
                 currentScene.playTime = currentPos;
             }
         }
@@ -279,9 +272,7 @@ public class ElementTimeline extends Element
                 sby2 -= 10;
                 sliderProgVert = 1.0F - MathHelper.clamp((double)(sby2 - mouseY) / (double)(sby2 - sby1), 0.0D, 1.0D);
             }
-        }
-        else
-        {
+        } else {
             sliderProgVert = 0.0D;
         }
 
@@ -289,9 +280,7 @@ public class ElementTimeline extends Element
         if(parent.isTab)
         {
             RendererHelper.startGlScissor(parent.posX + 1, parent.posY + 1 + 12, parent.getWidth() - 2, parent.getHeight() - 2 - 12);
-        }
-        else
-        {
+        } else {
             RendererHelper.startGlScissor(parent.posX + 1, parent.posY + 1, parent.getWidth() - 2, parent.getHeight() - 2);
         }
     }
@@ -364,9 +353,7 @@ public class ElementTimeline extends Element
                 sliderProgHori += 0.05D * -k;
                 sliderProgHori = MathHelper.clamp(sliderProgHori, 0.0D, 1.0D);
             }
-        }
-        else
-        {
+        } else {
             if(size > height - 20)
             {
                 sliderProgVert += 0.05D * -k;
@@ -406,9 +393,7 @@ public class ElementTimeline extends Element
         if(tickerPos < elementWidth)
         {
             sliderProgHori = 0.0D;
-        }
-        else
-        {
+        } else {
             int hiddenWidth = totalWidth - elementWidth;
             if(tickerPos > elementWidth + sliderProgHori * hiddenWidth || tickerPos < hiddenWidth * sliderProgHori)
             {
@@ -440,21 +425,15 @@ public class ElementTimeline extends Element
         if(isSelected)
         {
             RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeItemBgSelect[0], parent.workspace.currentTheme.elementTreeItemBgSelect[1], parent.workspace.currentTheme.elementTreeItemBgSelect[2], 255, getPosX() + 1, getPosY() + offY + 1, buttonsWidth - 1 - 2, 13 - 2, 0);
-        }
-        else if(hover)
-        {
+        } else if(hover) {
             RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeItemBgHover[0], parent.workspace.currentTheme.elementTreeItemBgHover[1], parent.workspace.currentTheme.elementTreeItemBgHover[2], 255, getPosX() + 1, getPosY() + offY + 1, buttonsWidth - 1 - 2, 13 - 2, 0);
-        }
-        else
-        {
+        } else {
             RendererHelper.drawColourOnScreen(parent.workspace.currentTheme.elementTreeItemBg[0], parent.workspace.currentTheme.elementTreeItemBg[1], parent.workspace.currentTheme.elementTreeItemBg[2], 255, getPosX() + 1, getPosY() + offY + 1, buttonsWidth - 1 - 2, 13 - 2, 0);
         }
         if(isHidden)
         {
             parent.workspace.getFontRenderer().drawString(parent.workspace.reString(name, buttonsWidth - 1), getPosX() + 4, getPosY() + offY + 2, Theme.getAsHex(parent.workspace.currentTheme.fontDim), false);
-        }
-        else
-        {
+        } else {
             parent.workspace.getFontRenderer().drawString(parent.workspace.reString(name, buttonsWidth - 1), getPosX() + 4, getPosY() + offY + 2, Theme.getAsHex(parent.workspace.currentTheme.font), false);
         }
     }

@@ -67,8 +67,7 @@ public class EventHandlerClient
             {
                 mc.displayGuiScreen(null);
                 mc.setIngameFocus();
-            }
-            else {
+            } else {
                 if(KeygripReloaded.eventHandlerClient.workspace == null)
                 {
                     KeygripReloaded.eventHandlerClient.workspace = new GuiWorkspace(1);
@@ -78,15 +77,11 @@ public class EventHandlerClient
                 KeygripReloaded.eventHandlerClient.workspace.oriScale = oriScale;
                 mc.displayGuiScreen(KeygripReloaded.eventHandlerClient.workspace);
             }
-        }
-        else if(KeygripReloaded.eventHandlerClient.workspace != null)
-        {
+        } else if(KeygripReloaded.eventHandlerClient.workspace != null) {
             if(event.keyBind.equals(KeygripReloaded.config.startStopRecord))
             {
                 KeygripReloaded.eventHandlerClient.workspace.toggleRecording();
-            }
-            else if(event.keyBind.equals(KeygripReloaded.config.toggleScenePlayback) && KeygripReloaded.eventHandlerClient.workspace.hasOpenScene())
-            {
+            } else if(event.keyBind.equals(KeygripReloaded.config.toggleScenePlayback) && KeygripReloaded.eventHandlerClient.workspace.hasOpenScene()) {
                 if(KeygripReloaded.eventHandlerClient.workspace.getOpenScene().playing)
                 {
                     KeygripReloaded.eventHandlerClient.workspace.getOpenScene().stop();
@@ -129,9 +124,7 @@ public class EventHandlerClient
                     if(sceneFrom.playTime < actionToRecord.startKey + startRecordTime)
                     {
                         mc.fontRenderer.drawString(Integer.toString((int)(Math.ceil((actionToRecord.startKey + startRecordTime - sceneFrom.playTime) / 20D))), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
-                    }
-                    else
-                    {
+                    } else {
                         mc.fontRenderer.drawString(I18n.format("window.recording"), (pX + 25) / scale, (pY + 2) / scale, 0xffffff, true);
                     }
                 }
@@ -166,9 +159,7 @@ public class EventHandlerClient
                 {
                     actionToRecord = null;
                     recordActionFrom = 0;
-                }
-                else if(dimension != mc.world.provider.getDimension() || mc.player.isDead)
-                {
+                } else if(dimension != mc.world.provider.getDimension() || mc.player.isDead) {
                     workspace.toggleRecording();
                 }
             }
@@ -207,9 +198,7 @@ public class EventHandlerClient
                     actionToRecord.actionComponents.put(recordActionFrom, actions);
                 }
             }
-        }
-        else
-        {
+        } else {
             if(!mc.isGamePaused() && !(mc.currentScreen instanceof GuiWorkspace) && workspace != null)
             {
                 for(Scene scene : workspace.sceneManager.scenes)
@@ -278,17 +267,14 @@ public class EventHandlerClient
                 {
                     actions.add(new ActionComponent(8, 0, null));
                 }
-
                 if(!(nextState.rot[0] == prevState.rot[0] && nextState.rot[1] == prevState.rot[1]))
                 {
                     actionToRecord.lookComponents.put(recordActionFrom, new LimbComponent(rotChange));
                 }
-
                 if(!(nextState.pos[0] == prevState.pos[0] && nextState.pos[1] == prevState.pos[1] && nextState.pos[2] == prevState.pos[2]))
                 {
                     actionToRecord.posComponents.put(recordActionFrom, new LimbComponent(posChange));
                 }
-
                 if(!actions.isEmpty())
                 {
                     actionToRecord.actionComponents.put(recordActionFrom, actions);

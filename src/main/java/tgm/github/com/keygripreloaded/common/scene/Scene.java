@@ -148,7 +148,6 @@ public class Scene
             LimbComponent lastPos = null;
             int lastLookInt = -1;
 
-
             for(Map.Entry<Integer, LimbComponent> e : a.lookComponents.entrySet()) {
                 if(e.getKey() < lastLookInt || e.getKey() > playTime) continue;
 
@@ -279,9 +278,7 @@ public class Scene
                 stream.close();
                 actNames.add(name);
             }
-            catch(IOException ignored)
-            {
-            }
+            catch(IOException ignored) {}
         }
     }
 

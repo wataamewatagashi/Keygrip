@@ -58,14 +58,12 @@ public class WindowOpenScene extends Window
             if(scene == null)
             {
                 workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.open.failed").putInMiddleOfScreen());
-            }
-            else {
+            } else {
                 ((GuiWorkspace)workspace).sceneManager.addScene(scene);
                 workspace.removeWindow(this, true);
             }
             break;
-            }
-
+        }
     }
 }
 

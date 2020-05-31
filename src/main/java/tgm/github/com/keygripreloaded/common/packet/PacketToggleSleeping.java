@@ -95,8 +95,7 @@ public class PacketToggleSleeping extends AbstractPacket
             {
                 KeygripReloaded.eventHandlerClient.sleepers.add(player);
             }
-        }
-        else {
+        } else {
             try {
                 sleeping.set(player, false);
             } catch (IllegalAccessException ignored) {}

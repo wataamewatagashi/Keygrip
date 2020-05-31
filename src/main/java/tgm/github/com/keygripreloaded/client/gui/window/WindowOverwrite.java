@@ -61,8 +61,7 @@ public class WindowOverwrite extends Window
             Scene.saveSceneActions(scene);
 
             parentWindow.shouldClose = true;
-        }
-        else {
+        } else {
             workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.saveAs.failed").putInMiddleOfScreen());
         }
         workspace.removeWindow(this, true);

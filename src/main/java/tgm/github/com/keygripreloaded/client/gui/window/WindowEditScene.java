@@ -59,9 +59,7 @@ public class WindowEditScene extends Window
                 {
                     projName = text.textField.getText();
                 }
-            }
-            else if (value instanceof ElementNumberInput)
-            {
+            } else if (value instanceof ElementNumberInput) {
                 ElementNumberInput nums = (ElementNumberInput) value;
                 startPos = new int[]{(int) Math.round(Double.parseDouble(nums.textFields.get(0).getText()) * Scene.PRECISION), (int) Math.round(Double.parseDouble(nums.textFields.get(1).getText()) * Scene.PRECISION), (int) Math.round(Double.parseDouble(nums.textFields.get(2).getText()) * Scene.PRECISION)};
             }

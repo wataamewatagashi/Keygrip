@@ -72,8 +72,7 @@ public class WindowImportAction extends Window
                 scene.actions.add(action);
                 Collections.sort(scene.actions);
                 workspace.removeWindow(this, true);
-            }
-            else {
+            } else {
                 workspace.addWindowOnTop(new WindowPopup(workspace, 0, 0, 180, 80, 180, 80, "window.importAction.failed").putInMiddleOfScreen());
             }
             break;
