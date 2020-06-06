@@ -48,25 +48,22 @@ public class WindowImportAction extends Window
         {
             workspace.removeWindow(this, true);
         }
-        if((element.id == 1 || element.id == 3) && ((GuiWorkspace)workspace).hasOpenScene()) return;
+        if((element.id != 1 && element.id != 3) || !((GuiWorkspace)workspace).hasOpenScene()) return;
 
         for (ElementListTree.Tree tree : modelList.trees) {
             if(!tree.selected) continue;
 
-            if(workspace.windowDragged == this)
-            {
+            if(workspace.windowDragged == this) {
                 workspace.windowDragged = null;
             }
             Action action = Action.openAction((File)tree.attachedObject);
-            if(action != null)
-            {
+            if(action != null) {
                 Minecraft mc = Minecraft.getMinecraft();
                 Scene scene = ((GuiWorkspace)workspace).getOpenScene();
                 action.identifier = RandomStringUtils.randomAscii(IOUtil.IDENTIFIER_LENGTH);
                 action.startKey = ((GuiWorkspace)workspace).timeline.timeline.getCurrentPos();
                 //TODO remember to doc down that importing refs the player.
-                if(!GuiScreen.isShiftKeyDown())
-                {
+                if(!GuiScreen.isShiftKeyDown()) {
                     action.offsetPos = new int[] { (int)Math.round(mc.player.posX * Scene.PRECISION) - scene.startPos[0], (int)Math.round(mc.player.posY * Scene.PRECISION) - scene.startPos[1], (int)Math.round(mc.player.posZ * Scene.PRECISION) - scene.startPos[2] };
                 }
                 scene.actions.add(action);
